@@ -8,7 +8,6 @@
   author,
   advisors,
   department,
-  abstract,
   doc,
 ) = [
   #set page(margin: (x: 3.2cm, y: 4.5cm))
@@ -56,7 +55,7 @@
   #align(center)[*Abstract*]
 
   #thin_line
-  #abstract
+  #include "abstract.typ"
 
   #pagebreak()
   #set page(
@@ -110,12 +109,21 @@
     ]
   }
 
+  #show outline: set heading(outlined: true)
   #show outline.entry.where(level: 1): it => {
     show repeat: none
+    v(0.4cm)
     strong(it)
   }
 
-  #outline(depth: 3)
+  #[
+    #show heading: it => {
+      it
+      v(0.5cm)
+    }
+    
+    #outline(depth: 3)
+  ]
 
   #set heading(numbering: (..nums) => nums.pos().map(str).join(".") + h(0.5cm))
   
@@ -123,6 +131,10 @@
   #counter(page).update(1)
 
   #doc
+
+  #set heading(numbering: none)
+
+  #bibliography("refs.bib")
 
   #set page(margin: 0pt)
   #image("assets/declaration.pdf")
