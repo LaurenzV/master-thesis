@@ -1,0 +1,29 @@
+<svg width="400" height="500" xmlns="http://www.w3.org/2000/svg" font-family="Noto Sans">
+    <!-- Background -->
+    <rect width="400" height="500" fill="#f8f9fa" rx="12"/>
+
+    <!-- Main modal container -->
+    <rect x="20" y="40" width="360" height="420" fill="white" rx="16" stroke="#e5e7eb" stroke-width="1"/>
+
+    <!-- Email input field -->
+    <rect x="50" y="80" width="300" height="50" fill="#f9fafb" rx="8" stroke="#d1d5db" stroke-width="1"/>
+    <text x="60" y="108" font-size="16" fill="#9ca3af">Email or phone number</text>
+
+    <!-- Password input field -->
+    <rect x="50" y="150" width="300" height="50" fill="#f9fafb" rx="8" stroke="#d1d5db" stroke-width="1"/>
+    <text x="60" y="178"  font-size="16" fill="#9ca3af">Password</text>
+
+    <!-- Log In button -->
+    <rect x="50" y="230" width="300" height="50" fill="#3b82f6" rx="8"/>
+    <text x="200" y="260" font-size="18" font-weight="bold" fill="white" text-anchor="middle">Log In</text>
+
+    <!-- Forgot password link -->
+    <text x="200" y="315"  font-size="14" fill="#3b82f6" text-anchor="middle">Forgot password?</text>
+
+    <!-- Divider line -->
+    <line x1="50" y1="350" x2="350" y2="350" stroke="#e5e7eb" stroke-width="1"/>
+
+    <!-- Create new account button -->
+    <rect x="100" y="380" width="200" height="45" fill="#22c55e" rx="8"/>
+    <text x="200" y="407" font-size="16" font-weight="bold" fill="white" text-anchor="middle">Create new account</text>
+</svg>

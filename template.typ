@@ -48,7 +48,7 @@
   #set align(left)
   #set par(justify: true)
   #set text(font: "PT Serif", size: 11pt)
-  #set page(margin: (x: 4.0cm, y: 4.5cm))
+  #set page(margin: (x: 3.5cm, y: 4.5cm))
 
   #v(0.3cm)
 
@@ -58,6 +58,14 @@
   #include "abstract.typ"
 
   #pagebreak()
+
+  #align(center)[*Acknowledgements*]
+
+  #thin_line
+  #include "acknowledgements.typ"
+
+  #pagebreak()
+  
   #set page(
     header: context [
       #let chapters = query(

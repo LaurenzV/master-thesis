@@ -19,7 +19,6 @@
 )
 
 #include "introduction.typ"
-#include "related_work.typ"
 #include "preliminaries.typ"
 #include "architecture.typ"
 #include "evaluation.typ"
