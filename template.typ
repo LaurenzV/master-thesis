@@ -133,7 +133,7 @@
     #outline(depth: 3)
   ]
 
-  #set heading(numbering: (..nums) => nums.pos().map(str).join(".") + h(0.5cm))
+  #set heading(numbering: (..nums) => nums.pos().map(str).join("."))
   
   #set page(numbering: "1")
   #counter(page).update(1)
