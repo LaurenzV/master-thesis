@@ -57,7 +57,7 @@ Assume we want to evaluate the curve at $t = 0.3$. We first start by finding the
 ) <quads_definition>
 
 === Cubic Bézier curves
-Cubic Bézier curves follow the same pattern as quadratic curves, the only difference being that we have an additional control point $P_3$, and therefore need to run three rounds of linear interpolation to evaluate a point on the curve. The formula is given by $P_0(1 - t)^3 + P_2 3t(1 - t)^2 + P_3 3t^2(1 - t) + P_1t^3$. As can be seen in @cubics_definition, we can easily visualize the whole process of evaluation by repeatedly subdividing the curve using linear interpolation with your parametric value $t$, until we have computed the final point.
+Cubic Bézier curves follow the same pattern as quadratic curves, the only difference being that we have an additional control point $P_3$, and therefore need to run three rounds of linear interpolation to evaluate a point on the curve. The formula is given by $P_0(1 - t)^3 + P_2 3t(1 - t)^2 + P_3 3t^2(1 - t) + P_1t^3$ #cite(<mathematics_for_computer_graphics>, supplement: [p. 240]). In @cubics_definition, we can once again gain a better intuition of this formula by visualizing the whole process of evaluation by repeatedly subdividing the curve using linear interpolation with our parametric value $t$, until we have computed the final point.
 
 #figure(
   image("assets/cubics.pdf"),
@@ -65,8 +65,11 @@ Cubic Bézier curves follow the same pattern as quadratic curves, the only diffe
 ) <cubics_definition>
 
 == Fills and strokes
+We know now how we can define the outline of a shape we want to draw.
 
 == Fill rules
+
+== Colors
 
 == Anti-aliasing
 
