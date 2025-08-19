@@ -19,7 +19,7 @@
 )
 
 #include "introduction.typ"
-#include "preliminaries.typ"
+#include "background.typ"
 #include "architecture.typ"
 #include "evaluation.typ"
 #include "future_work.typ"

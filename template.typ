@@ -85,8 +85,10 @@
       #hydra(2, display: (_, it) => {
         set align(right)
         numbering(it.numbering, ..counter(heading).at(it.location()))
-        it.body
+        [.] + h(0.3cm) + it.body
 
+        v(-0.3cm)
+        
         thin_line
       })
     ]
@@ -113,7 +115,7 @@
       #thin_line
     ] else [
       #set text(size: 1.2em)
-      #it
+      #it 
     ]
   }
 
