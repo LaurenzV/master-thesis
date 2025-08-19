@@ -11,6 +11,9 @@
   doc,
 ) = [
   #set page(margin: (x: 3.2cm, y: 4.5cm))
+  #set figure(
+    placement: auto
+  )
 
   #image("assets/eth_logo.pdf", width: 5cm)
 
