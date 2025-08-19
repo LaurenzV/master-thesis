@@ -1,0 +1,4 @@
+<svg id="svg1" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+    <path id="path1" d="M 100 20 l 50 160 l -130 -100 l 160 0 l -130 100 z" fill="red" fill-rule="nonzero" stroke="black" stroke-width="2"/>
+    <rect id="frame" x="0" y="0" width="200" height="200" fill="none" stroke="black"/>
+</svg>

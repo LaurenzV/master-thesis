@@ -21,7 +21,7 @@ However, something that is often not appreciated is that there actually is _a lo
   placement: auto
 )
 
-Computer displays only understand one language: the language of pixels. Computer screens are made up by a rectangular grid of small individual pixels (usually anywhere between 1000 and 4000 pixels in a single direction) that can emit varying intensities of red, green and blue at the same time. By mixing and matching those intensities in certain ways, other intermediate color such as orange, purple or white can be simulated. By making each pixel emit a specific color, we can simulate nearly any graphical effect that can then be interpreted by the user. @comparison_raster shows a Facebook login modal as it is displayed on a screen with a resolution of 180x225 pixels. When looking at this picture from afar, it is very easy to discern the login modal. However, a considerable disadvantage of this pixel-based graphics model is that it's inherently lossy: Once you render the modal at a specific pixel resolution and approximate its contents by pixels, there is no way to recover the original information anymore. As a result, when trying to zoom into @comparison_raster to scale it up, instead of becoming more readable, the result will contain very noticeable pixel artifacts and become even _harder_ to read.
+Computer displays only understand one language: the language of pixels. Computer screens are made up by a rectangular grid of small individual pixels (usually anywhere between 1000 and 4000 pixels in a single direction) that can emit varying intensities of red, green and blue at the same time. By mixing and matching those intensities in certain ways, other intermediate color such as orange, purple or white can be simulated. By making each pixel emit a specific color, we can simulate nearly any graphical effect that can then be interpreted by the user. @comparison_raster shows a Facebook login modal as it is displayed on a screen with a resolution of 180x225 pixels. When looking at this picture from afar, it is very easy to discern the login modal. However, a considerable disadvantage of this pixel-based graphics model is that it is inherently lossy: Once you render the modal at a specific pixel resolution and approximate its contents by pixels, there is no way to recover the original information anymore. As a result, when trying to zoom into @comparison_raster to scale it up, instead of becoming more readable, the result will contain very noticeable pixel artifacts and become even _harder_ to read.
 
 This is in stark contrast to the graphics model used by web browsers and other applications, where the contents of a graphics object are instead represented using _vector drawing instructions_. Conceptually, the viewable area is usually interpreted as a continuous coordinate system. Inside of this coordinate system, drawing instructions can be emitted, such as _draw a line from point A to point B_ or _draw a curve from point C to point D, while intersecting the point E on the way_. The exact semantics of these basic primitives will be defined more precisely in @drawing_primitives.
 
@@ -86,12 +86,42 @@ We know now how we can define the outline of a shape or object we want to displa
 
 In the case of _filling_, we determine all of the areas on the drawing canvas that are _inside_ of the outline we defined (how exactly these are determined will be elaborated in @fill_rules) and paint them using the specified color, as can be seen in @dragon_filled.
 
-_Stroking_ on the other hand uses a different approach. Stroking a shape is analogously equivalent to using a marker with a specific color and width, and using it to trace the outline of the shape. As a result of this, all of the traced areas will be painted in that color, as can be seen in @dragon_stroked.
+_Stroking_ on the other hand uses a different approach. Stroking a shape is analogously equivalent to using a marker with a specific color and width, and using it to trace the outline of the shape. In doing so, all of the outer parts of the shape will be painted in that color. The visual effect of this drawing mode can be observed in @dragon_stroked.
 
 == Fill rules <fill_rules>
+Another important problem to be aware of is the question of which parts of a shape is actually considered to be on the "inside" and thus should be colored. For simple shapes such as rectangles or circles, it is intuitively obvious which areas are inside of the shape. But when trying to analyze more complex, self-intersecting paths, just relying on intuition is not sufficient anymore. There is a need for a clear definition of "insideness" of a shape, such that it is always possible to unambiguously determine whether a point on the drawing area is inside of the shape or not.
+
+In order to do so, we first need to introduce the concept of _winding numbers_. Remember that our shapes are built using lines and curves, which always have a start and an end point. Consequently, each path has an inherent direction. This is illustrated in @star_outline, where we have the outline of a star as well as red arrows that indicate the direction of each line. In order to determine whether any arbitrary point, is inside of the shape, we keep track of a winding number counter (which is initially 0) and shoot an imaginary ray into any arbitrary direction. Every time that ray intersects a path of the shape, we check the direction in which path intersects our ray. We increase the winding number counter if the direction is left-to-right, and decrease it if it is right-to-left #cite(<svg1_spec>, supplement: [ch. 11]).
+
+#subpar.grid(
+  figure(image("assets/star_outline.svg"), caption: [
+    Analysis of winding number in two locations .
+  ]), <star_outline>,
+  figure(image("assets/star_nonzero.svg"), caption: [
+    The star painted using the non-zero fill rule.
+  ]), <star_nonzero>,
+    figure(image("assets/star_evenodd.svg"), caption: [
+    The star painted using the even-odd fill rule.
+  ]), <star_evenodd>,
+  columns: (1fr, 1fr, 1fr),
+  caption: [Illustration of the different fill rules.],
+  label: <fill_rules_illlustration>,
+)
+
+#let orange-point = {
+  text(fill: rgb("#ff7911ff"))[orange point]
+}
+#let blue-point = text(fill: rgb("#000080ff"))[blue point]
+#let fuchsia-point = text(fill: rgb("#ff00ffff"))[fuchsia point]
+
+Let us consider the #orange-point and its corresponding ray in @star_outline first. It intersects the shape twice and in both cases the direction is left-to-right. As a consequence, the winding number is two. The #blue-point only has one left-to-right intersection with a path, and therefore has a winding number of one. Finally, the #fuchsia-point first has a right-to-left intersection resulting in an intermediate winding number of -1. However, it then intersects the path a second time left-to-right, resulting in a final winding number of zero.
+
+We conceptually repeat the above calculation for each point in the drawing area. Once we know all winding numbers, we can simply apply the fill rule to determine whether a point should be painted or not: For the _non-zero_ winding rule, we paint the point if and only if it is not equal to zero. For the _even-odd_ winding rule, we paint the point if and only if the winding number is an odd number. The difference becomes apparent when contrasting @star_nonzero and @star_evenodd. In both cases, the #fuchsia-point remains unpainted, since the winding number is zero. The #blue-point _is_ painted in both cases, since one is both, not equal to zero and also an odd number. Things start to differ when looking at the #orange-point, though. According to the non-zero rule, the point _is_ painted since two is not equal to zero. However, it is not painted according to the even-odd rule, because two is not an odd number.
+
+== Anti-aliasing
 
 == Colors
 
-== Anti-aliasing
+== Compositing and Blending
 
 == Paints
