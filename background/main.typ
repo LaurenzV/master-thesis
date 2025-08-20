@@ -3,7 +3,7 @@
 = Background <background>
 In this chapter, we will introduce some of the basic ideas and concepts of 2D rendering.
 
-== 2D rendering
+== 2D rendering <rendering_intro>
 Nowadays, people mostly take it for granted that they can use their computers for various activities and interact with it seamlessly without any hiccups. This is possible thanks to a tight feedback loop, where users can observe the current _state_ of their system via their displays and based on this make decisions on what to do next by controlling their mouse and keyboard. For example, they expect to be able to navigate and scroll through web pages without significant delay. When writing an e-mail, the typed words should immediately show up on the display so that they can be seen and edited in the case of a typo.
 
 However, something that is often not appreciated is that there actually is _a lot of_ work happening in the background to ensure that the user has a seemless experience when doing the above-mentioned activities. One fundamental reason for this is that there exists a huge gap between the representation of graphical information in our applications and the way displays can actually show information to the user. This gap needs to be bridged in some way. This mismatch is exemplified in @comparison_vector_raster.
@@ -98,7 +98,7 @@ In the case of _filling_, we determine all of the areas on the drawing canvas th
 _Stroking_ on the other hand uses a different approach. Stroking a shape is analogously equivalent to using a marker with a specific color and width, and using it to trace the outline of the shape. In doing so, all of the outer parts of the shape will be painted in that color. The visual effect of this drawing mode can be observed in @dragon_stroked.
 
 == Fill rules <fill_rules>
-Another important problem to be aware of is the question of which parts of a shape is actually considered to be on the "inside" and thus should be colored. For simple shapes such as rectangles or circles, it is intuitively obvious which areas are inside of the shape. But when trying to analyze more complex, self-intersecting paths, just relying on intuition is not sufficient anymore. There is a need for a clear definition of "insideness" of a shape, such that it is always possible to unambiguously determine whether a point on the drawing area is inside of the shape or not.
+Another important problem to be aware of is the question of which parts of a shape are actually considered to be on the "inside" and thus should be colored. For simple shapes such as rectangles or circles, it is intuitively obvious which areas are inside of the shape. But when trying to analyze more complex, self-intersecting paths, just relying on intuition is not sufficient anymore. There is a need for a clear definition of "insideness" of a shape, such that it is always possible to unambiguously determine whether a point on the drawing area is inside of the shape or not.
 
 In order to do so, we first need to introduce the concept of _winding numbers_. Remember that our shapes are built using lines and curves, which always have a start and an end point. Consequently, each path has an inherent direction. This is illustrated in @star_outline, where we have the outline of a star as well as red arrows that indicate the direction of each line. In order to determine whether any arbitrary point, is inside of the shape, we keep track of a winding number counter (which is initially 0) and shoot an imaginary ray into any arbitrary direction. Every time that ray intersects a path of the shape, we check the direction in which path intersects our ray. We increase the winding number counter if the direction is left-to-right, and decrease it if it is right-to-left #cite(<svg1_spec>, supplement: [ch. 11]).
 
@@ -203,7 +203,7 @@ For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert
 
 == Complex Paints
 
-Up until now, we have always painted our shapes using one single color. While this is by far the most common operation, there are actually many different kinds of fills that can be used. The exact set of filling primitives that is available can vary: In the case of SVG and HTML Canvas, the two main types of paint are _gradients_ and _patterns_ #cite(<svg1_spec>, supplement: [ch. 13]) #cite(<html_spec>, supplement: [ch. 4.12.5.1.10]). The PDF specification defines some additional paints, such as triangle meshes and Coons patch meshes. In this section, we will narrow our focus on the two paints commonly used in web rendering.
+Up until now, we have always painted our shapes using one single color. While this is by far the most common operation, there are actually many different kinds of fills that can be used. The exact set of filling primitives that is available can vary: For example, in the case of SVG and HTML Canvas, the two main types of paint are _gradients_ and _patterns_ #cite(<svg1_spec>, supplement: [ch. 13]) #cite(<html_spec>, supplement: [ch. 4.12.5.1.10]). The PDF specification, however, defines some additional paints, including triangle meshes and Coons patch meshes #cite(<pdf_spec>, supplement: [p. 192-201]). In this section, we will narrow our focus on the two paints commonly used in web rendering. Instead of explaining the exact semantics of patterns as they are specified in the SVG specification, we will make a simplification and only talk about plain _image fills_, which can be seen as a subset of pattern fills.
 
 === Gradients
 Conceptually, gradients represent smooth transitions between two or multiple colors. We consider a range of a parametric value $t $ between 0.0 and 1.0 and assign a number of colors to a specific position on that range. For example, we could assign the color blue to the position 0.0, the color red to the position 0.4, the color yellow to the position 0.7 and finally the color green to the position 1.0. All of the other positions that have not been explicitly specified are calculated by doing a linear interpolation between the given stops. The result of mapping out the whole range is visualized in @gradient_line.
@@ -242,8 +242,38 @@ Finally, sweep gradients are colored by setting a center point as well as a star
   placement: auto,
 ) 
 
-=== Patterns
+=== Images
+As was mentioned in @rendering_intro, it is highly desirable to represent content as vector graphics whenever possible, as it allows for arbitrary scaling without any loss of precision. However, it is clear that this is not always the case. When browsing websites, you will often encounter images that have been stored as raster images with a specific pixel resolution, the reason for this is that many objects simply cannot be represented as vector graphics, like for example images taken with a camera.
 
+The fundamental difficulty of rendering images in 2D graphics is that the input image might not have the same resolution as it will have in the rendered image. For instance, if an input image has a resolution of 1000x800 pixels but our output display has a resolution of 1350x1080, we need to apply a scaling factor of 1.35 to the image for it to render correctly. To do this, we need to _resample_ the image to determine what color each pixel on the display should be to accurately reproduce the original image at the higher resolution. In order to achieve this, three methods are commonly used: _Nearest-neighbor interpolation_, _bilinear interpolation_ and _bicubic interpolation_ #cite(<digital_image_processing>, supplement: [p. 87-89]). @patterns_butterfly contrasts the different scaling methods using the 10x10 pixels input image in @input_image scaled by a factor of 50.
+
+In the case of nearest-neighbor interpolation, the algorithm is very straight-forward: It simply calculates the position of the new pixel in the old image by multiplying it with the inverse scale, and then samples the color value of the closest pixel. The result in @butterfly_nearest_neighbor shows that by using this interpolation method, the "block-like" structure of the original input image is preserved. In certain cases, this can be a desirable property (imagine for example rendering a heat map as it can be created with libraries like `matplotlib`, where you want to ensure that the individual cells retain their color), but in many cases, this interpolation method can cause artifacts, and is therefore not often used #cite(<digital_image_processing>, supplement: [p. 88]). The main advantage is that it is computationally very cheap.
+
+When performing bilinear interpolation, we do not only consider a single nearest neighbor, but actually the four nearest neighbors. We then assign a weight to each neighbor based on the exact location we are sampling and then interpolate across those 4 pixels. The same applies to bicubic interpolation, with the only difference that we consider 16 neighbors instead #cite(<digital_image_processing>, supplement: [p. 88]). The results for bilinear interpolation can be observed in @butterfly_bilinear, where the boundaries are much smoother due to the interpolation. At first glance, the bicubic interpolation in @butterfly_bicubic has a very similar effect to the bilinear interpolation in @butterfly_bilinear, but looking at it closer, it does become apparent that the bilinear version has some very subtle "star-like" artifacts in some places that are not present in the bicubic version. However, the cost for the slightly better quality is a much higher computational intensity per pixel.
+
+#subpar.grid(
+  [], figure(image("assets/texture_nearest_neighbor.png", width: 30%), caption: [
+    The input image.
+  ]),
+  <input_image>, [],
+figure(image("assets/butterfly_nearest_neighbor.svg"), caption: [
+    Nearest-neighbor interpolation.
+  ]),
+  <butterfly_nearest_neighbor>,
+figure(image("assets/butterfly_bilinear.svg"), caption: [
+    Bilinear interpolation. #linebreak() #linebreak()
+  ]),
+  <butterfly_bilinear>,
+
+  figure(image("assets/butterfly_bicubic.svg"), caption: [
+    Bicubic interpolation. #linebreak() #linebreak()
+  ]),
+  <butterfly_bicubic>,
+  columns: (1fr, 1fr, 1fr),
+  caption: [The shape of a butterfly filled using a 50x scaled image using nearest-neighbor, bilinear and bicubic interpolation.],
+  label: <patterns_butterfly>,
+  placement: auto,
+) 
 
 == Anti-aliasing
 
