@@ -9,16 +9,20 @@ Nowadays, people mostly take it for granted that they can use their computers fo
 However, something that is often not appreciated is that there actually is _a lot of_ work happening in the background to ensure that the user has a seemless experience when doing the above-mentioned activities. One fundamental reason for this is that there exists a huge gap between the representation of graphical information in our applications and the way displays can actually show information to the user. This gap needs to be bridged in some way. This mismatch is exemplified in @comparison_vector_raster.
 
 #subpar.grid(
-    figure(image("/assets/facebook_modal.png"), caption: [
+  figure(image("/assets/facebook_modal.png"), caption: [
     The modal as a 180x225 image.
-  ]), <comparison_raster>,
+  ]),
+  <comparison_raster>,
+
   figure(image("/assets/facebook_modal.svg"), caption: [
     The modal as a vector graphic.
-  ]), <comparison_vector>,
+  ]),
+  <comparison_vector>,
+
   columns: (1fr, 1fr),
   caption: [A comparison between a rasterized image and a vector graphic, based on a recreation of the Facebook login modal @facebook_login.],
   label: <comparison_vector_raster>,
-  placement: auto
+  placement: auto,
 )
 
 Computer displays only understand one language: the language of pixels. Computer screens are made up by a rectangular grid of small individual pixels (usually anywhere between 1000 and 4000 pixels in a single direction) that can emit varying intensities of red, green and blue at the same time. By mixing and matching those intensities in certain ways, other intermediate color such as orange, purple or white can be simulated. By making each pixel emit a specific color, we can simulate nearly any graphical effect that can then be interpreted by the user. @comparison_raster shows a Facebook login modal as it is displayed on a screen with a resolution of 180x225 pixels. When looking at this picture from afar, it is very easy to discern the login modal. However, a considerable disadvantage of this pixel-based graphics model is that it is inherently lossy: Once you render the modal at a specific pixel resolution and approximate its contents by pixels, there is no way to recover the original information anymore. As a result, when trying to zoom into @comparison_raster to scale it up, instead of becoming more readable, the result will contain very noticeable pixel artifacts and become even _harder_ to read.
@@ -46,7 +50,7 @@ The definition of lines is relatively straight-forward and illustrated in @line_
 
 === Quadratic Bézier curves
 
-For quadratics Bézier curves, things are a bit different. While we still have the start and end points $P_0$ and $P_1$, we have a third point $P_2$ which is called the _control point_. Given these points, the formula for evaluating the curve is given by $P_0(1 - t)^2 + 2 * (1 - t) t P_2 + P_1 * t^2$ #cite(<mathematics_for_computer_graphics>, supplement: [p. 239]). The evaluation of a quadratic Bézier curve can be nicely visualized by thinking of it as a linear interpolation applied twice, as can be seen in @quads_definition. 
+For quadratics Bézier curves, things are a bit different. While we still have the start and end points $P_0$ and $P_1$, we have a third point $P_2$ which is called the _control point_. Given these points, the formula for evaluating the curve is given by $P_0(1 - t)^2 + 2 * (1 - t) t P_2 + P_1 * t^2$ #cite(<mathematics_for_computer_graphics>, supplement: [p. 239]). The evaluation of a quadratic Bézier curve can be nicely visualized by thinking of it as a linear interpolation applied twice, as can be seen in @quads_definition.
 
 Assume we want to evaluate the curve at $t = 0.3$. We first start by finding the point $P_0P_2$ by linearly interpolating the points $P_0$ and $P_2$ with our given $t$. We do the same for the line spanning the points $P_2$ and $P_1$ to end up with the point $P_2P_1$. Then, we simply connect the points $P_0P_2$ and $P_2P_1$, and perform another round of linear interpolation with our value $t$, which will then yield the final point on the curve. Similarly to simple line segments, we perform this evaluation for all $t in [0, 1]$ to end up with the final curve as it is visualized on the right in @quads_definition.
 
@@ -68,18 +72,23 @@ Cubic Bézier curves follow the same pattern as quadratic curves, the only diffe
   figure(image("assets/dragon_outline.svg"), caption: [
     The outline of a dragon.
     #linebreak()#linebreak()
-  ]), <dragon_outline>,
+  ]),
+  <dragon_outline>,
   figure(image("assets/dragon_filled.svg"), caption: [
     The dragon painted using a blue fill.
     #linebreak()#linebreak()
-  ]), <dragon_filled>,
-    figure(image("assets/dragon_stroked.svg"), caption: [
-    The dragon painted using a blue stroke of width 2 pixels. 
-  ]), <dragon_stroked>,
+  ]),
+
+  <dragon_filled>,
+  figure(image("assets/dragon_stroked.svg"), caption: [
+    The dragon painted using a blue stroke of width 2 pixels.
+  ]),
+  <dragon_stroked>,
+
   columns: (1fr, 1fr, 1fr),
   caption: [Illustration of the different drawing modes.],
   label: <drawing_modes>,
-  placement: auto
+  placement: auto,
 )
 
 We know now how we can define the outline of a shape or object we want to display, but how can we actually _draw_ it. In general, we distinguish between two different types of modes: _filling_ and _stroking_. @drawing_modes illustrates the difference between those. In @dragon_outline, we can see the outline of a dragon, which has been specified using the basic building blocks we defined in @drawing_primitives
@@ -96,13 +105,18 @@ In order to do so, we first need to introduce the concept of _winding numbers_. 
 #subpar.grid(
   figure(image("assets/star_outline.svg"), caption: [
     Analysis of winding number in two locations .
-  ]), <star_outline>,
+  ]),
+  <star_outline>,
   figure(image("assets/star_nonzero.svg"), caption: [
     The star painted using the non-zero fill rule.
-  ]), <star_nonzero>,
-    figure(image("assets/star_evenodd.svg"), caption: [
+  ]),
+
+  <star_nonzero>,
+  figure(image("assets/star_evenodd.svg"), caption: [
     The star painted using the even-odd fill rule.
-  ]), <star_evenodd>,
+  ]),
+  <star_evenodd>,
+
   columns: (1fr, 1fr, 1fr),
   caption: [Illustration of the different fill rules.],
   label: <fill_rules_illlustration>,
@@ -122,40 +136,38 @@ We conceptually repeat the above calculation for each point in the drawing area.
 In order to be able to paint shapes using certain colors, we need to be able to somehow _specify_ those colors. The specification of colors is an incredibly multi-faceted and complex topic; covering all the details that are involved in the different ways colors can be defined is beyond the scope of this work. Instead, we will limit our explanations to defining RGB colors in the sRGB color space @srgb_color_space. The sRGB color space is used frequently in the context of computer devices and used as the default color space in many web graphics specifications such as SVG #cite(<svg1_spec>, supplement: [ch. 12]) or HTML Canvas #cite(<html_spec>, supplement: [ch. 4.12]).
 
 #let color-grid = [
-  #let color-rect(fill) = box[#rect(width: 1.2em, height: 1.2em, fill: fill, stroke: 1pt)];
+  #let color-rect(fill) = box[#rect(
+    width: 1.2em,
+    height: 1.2em,
+    fill: fill,
+    stroke: 1pt,
+  )];
 
-  #let color-el(r, g, b) =  grid(
+  #let color-el(r, g, b) = grid(
     align: horizon,
     columns: 2,
     column-gutter: 4pt,
     color-rect(rgb(r, g, b)),
     [
-       R: #r, G: #g, B: #b \
-    ]
+      R: #r, G: #g, B: #b \
+    ],
   )
 
   #grid(
     columns: (1fr, 1fr, 1fr),
     column-gutter: 8pt,
     row-gutter: 8pt,
-    align: horizon + center,
-    [],
-    color-el(0, 0, 0),
-    [],
-    color-el(255, 0, 0),
-    color-el(0, 255, 0),
-    color-el(0, 0, 255),
-    color-el(128, 128, 0),
-    color-el(36, 19, 140),
-    color-el(200, 0, 220),
-    [],
-    color-el(255, 255, 255),
+    align: horizon + left,
+    [], color-el(0, 0, 0), [],
+    color-el(255, 0, 0), color-el(0, 255, 0), color-el(0, 0, 255),
+    color-el(128, 128, 0), color-el(36, 19, 140), color-el(200, 0, 220),
+    [], color-el(255, 255, 255),
   )
 ]
 
 #figure(
   color-grid,
-  caption: [The result of mixing the color primaries with different intensities]
+  caption: [The result of mixing the color primaries with different intensities.],
 ) <color-primaries>
 
 In this color model, we define our colors using the three primaries red, green, and blue, which can be activated with specific degrees of intensities. How these intensities are described depends on the underlying number type that we use. When using floating point numbers, $0.0$ usually stands for no activation at all, while $1.0$ stands for full activation. It is also common to use 8-bit integers to represent the RGB intensities, in which case 0 stands for no activation and 255 stands for full activation. @color-primaries shows some of the resulting colors that can be achieved by mixing intensities in certain ways: Enabling none of the primaries gives you a black color, while fully enabling all results in white. Fully activating one of the primaries while disabling all other ones results in the primary color itself. And finally, by using various combinations of intensities, many different intermediate colors can be created.
@@ -168,13 +180,14 @@ The answer lies in the _opacity_ (also known as alpha) of the color. In @colors,
 #figure(
   grid(
     columns: 4,
+    gutter: 1em,
     image("assets/rects_0.svg"),
     image("assets/rects_25.svg"),
     image("assets/rects_75.svg"),
-    image("assets/rects_100.svg")
+    image("assets/rects_100.svg"),
   ),
-  caption: [Painting overlapping shapes with varying opacities and a white background. From left to right: 0%, 25%, 75% and 100% opacities],
-  placement: auto
+  caption: [Painting overlapping shapes with varying opacities and a white background. From left to right: 0%, 25%, 75% and 100% opacities.],
+  placement: auto,
 ) <opacities-fig>
 
 The effect of varying the opacity can be observed @opacities-fig, where green rectangles with varying opacities are drawn on top of a fully opaque red rectangle. In case the opacity is 0%, the green rectangle cannot be seen at all. In the case of 100%, the overlapping areas are painted completely in green. In all other cases, the background still shines through to a certain degree, depending on how high the transparency is. As a result, the overlapping area of the two rectangles takes on a color that is somewhere "in-between" red and green.
@@ -189,6 +202,48 @@ For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert
 == Compositing and Blending <compositing_and_blending>
 
 == Complex Paints
+
+Up until now, we have always painted our shapes using one single color. While this is by far the most common operation, there are actually many different kinds of fills that can be used. The exact set of filling primitives that is available can vary: In the case of SVG and HTML Canvas, the two main types of paint are _gradients_ and _patterns_ #cite(<svg1_spec>, supplement: [ch. 13]) #cite(<html_spec>, supplement: [ch. 4.12.5.1.10]). The PDF specification defines some additional paints, such as triangle meshes and Coons patch meshes. In this section, we will narrow our focus on the two paints commonly used in web rendering.
+
+=== Gradients
+Conceptually, gradients represent smooth transitions between two or multiple colors. We consider a range of a parametric value $t $ between 0.0 and 1.0 and assign a number of colors to a specific position on that range. For example, we could assign the color blue to the position 0.0, the color red to the position 0.4, the color yellow to the position 0.7 and finally the color green to the position 1.0. All of the other positions that have not been explicitly specified are calculated by doing a linear interpolation between the given stops. The result of mapping out the whole range is visualized in @gradient_line.
+
+#figure(
+  image("assets/gradient_rectangle.pdf", width: 80%),
+  caption: [Visualization of a gradient line with the stops `(blue, 0.0)`, `(red, 0.4)`, `(yellow, 0.7)` and `(green, 1.0)`.]
+) <gradient_line>
+
+Once we have a mapping from $t$ values to a color, we simply need to define another mapping from the $(x, y)$ position of a pixel to a $t$ value, so that we know how to color that pixel. There are three commonly used type of gradients that define this mapping in different ways: _Linear gradients_, _radial gradients_ and _sweep gradients_. Examples of applying those paint types to the shape of a butterfly can be seen in @gradients_butterfly.
+
+In the case of a linear gradient, we define a start and end point along which the gradient should interpolate. In the case of @butterfly_linear, the start point is in the top-left corner and the end point in the bottom-right corner. As a result of this, the visual result will be a linear variation of the gradient line in a diagonal direction.
+
+For radial gradients, we define the position and radius of a start circle as well as an end circle. In @butterfly_radial, the start and end circles are both positioned in the centers, while the start radius is set to 0 and the end radius to the maximum. The visual result of this gradient is a progression of the interpolated colors in a circular fashion, as if the inner circle "expanded" to the outer circle while varying the color.
+
+Finally, sweep gradients are colored by setting a center point as well as a start and end angle. In @butterfly_sweep, the center point has been set in the middle, and the radii are 0#sym.degree and 360#sym.degree respectively. In the end, the colors of the gradient line will vary as the angle of the position of the pixel from the center increases.
+
+#subpar.grid(
+  figure(image("assets/butterfly_linear.svg"), caption: [
+    Linear gradient.
+  ]),
+  <butterfly_linear>,
+
+  figure(image("assets/butterfly_radial.svg"), caption: [
+    Radial gradient.
+  ]),
+  <butterfly_radial>,
+
+  figure(image("assets/butterfly_sweep.svg"), caption: [
+    Sweep gradient.
+  ]),
+  <butterfly_sweep>,
+  columns: (1fr, 1fr, 1fr),
+  caption: [The shape of a butterfly filled using a linear, radial and sweep gradient.],
+  label: <gradients_butterfly>,
+  placement: auto,
+) 
+
+=== Patterns
+
 
 == Anti-aliasing
 
