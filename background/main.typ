@@ -118,10 +118,80 @@ Let us consider the #orange-point and its corresponding ray in @star_outline fir
 
 We conceptually repeat the above calculation for each point in the drawing area. Once we know all winding numbers, we can simply apply the fill rule to determine whether a point should be painted or not: For the _non-zero_ winding rule, we paint the point if and only if it is not equal to zero. For the _even-odd_ winding rule, we paint the point if and only if the winding number is an odd number. The difference becomes apparent when contrasting @star_nonzero and @star_evenodd. In both cases, the #fuchsia-point remains unpainted, since the winding number is zero. The #blue-point _is_ painted in both cases, since one is both, not equal to zero and also an odd number. Things start to differ when looking at the #orange-point, though. According to the non-zero rule, the point _is_ painted since two is not equal to zero. However, it is not painted according to the even-odd rule, because two is not an odd number.
 
+== Colors <colors>
+In order to be able to paint shapes using certain colors, we need to be able to somehow _specify_ those colors. The specification of colors is an incredibly multi-faceted and complex topic; covering all the details that are involved in the different ways colors can be defined is beyond the scope of this work. Instead, we will limit our explanations to defining RGB colors in the sRGB color space @srgb_color_space. The sRGB color space is used frequently in the context of computer devices and used as the default color space in many web graphics specifications such as SVG #cite(<svg1_spec>, supplement: [ch. 12]) or HTML Canvas #cite(<html_spec>, supplement: [ch. 4.12]).
+
+#let color-grid = [
+  #let color-rect(fill) = box[#rect(width: 1.2em, height: 1.2em, fill: fill, stroke: 1pt)];
+
+  #let color-el(r, g, b) =  grid(
+    align: horizon,
+    columns: 2,
+    column-gutter: 4pt,
+    color-rect(rgb(r, g, b)),
+    [
+       R: #r, G: #g, B: #b \
+    ]
+  )
+
+  #grid(
+    columns: (1fr, 1fr, 1fr),
+    column-gutter: 8pt,
+    row-gutter: 8pt,
+    align: horizon + center,
+    [],
+    color-el(0, 0, 0),
+    [],
+    color-el(255, 0, 0),
+    color-el(0, 255, 0),
+    color-el(0, 0, 255),
+    color-el(128, 128, 0),
+    color-el(36, 19, 140),
+    color-el(200, 0, 220),
+    [],
+    color-el(255, 255, 255),
+  )
+]
+
+#figure(
+  color-grid,
+  caption: [The result of mixing the color primaries with different intensities]
+) <color-primaries>
+
+In this color model, we define our colors using the three primaries red, green, and blue, which can be activated with specific degrees of intensities. How these intensities are described depends on the underlying number type that we use. When using floating point numbers, $0.0$ usually stands for no activation at all, while $1.0$ stands for full activation. It is also common to use 8-bit integers to represent the RGB intensities, in which case 0 stands for no activation and 255 stands for full activation. @color-primaries shows some of the resulting colors that can be achieved by mixing intensities in certain ways: Enabling none of the primaries gives you a black color, while fully enabling all results in white. Fully activating one of the primaries while disabling all other ones results in the primary color itself. And finally, by using various combinations of intensities, many different intermediate colors can be created.
+
+== Opacity
+So far, we have only considered the situation of drawing a _single_ shape in a specific color. In doing so, we expect all areas covered by the shape to be painted using the specified color. However, what happens if we draw 2 shapes in different colors that overlap each other? How will the area that contains the overlaps be painted?
+
+The answer lies in the _opacity_ (also known as alpha) of the color. In @colors, it was mentioned that a color is specified by three components: The red, green and blue intensity. In reality, there usually is a fourth component which is called _alpha_. The alpha value specifies how transparent the color should be. If the value is 0 (0%), it means that the color is completely _transparent_, i.e. completely invisible. If the value is 1.0 (100%), the color is completely _opaque_, i.e. completely visible. By choosing a value between 0 and 1.0, we can make a color semi-transparent. Similarly to colors, we can also specify opacity using values between 0 and 255 instead. We use the term _RGBA_ to denote storing RGB colors with an additional alpha channel.
+
+#figure(
+  grid(
+    columns: 4,
+    image("assets/rects_0.svg"),
+    image("assets/rects_25.svg"),
+    image("assets/rects_75.svg"),
+    image("assets/rects_100.svg")
+  ),
+  caption: [Painting overlapping shapes with varying opacities and a white background. From left to right: 0%, 25%, 75% and 100% opacities],
+  placement: auto
+) <opacities-fig>
+
+The effect of varying the opacity can be observed @opacities-fig, where green rectangles with varying opacities are drawn on top of a fully opaque red rectangle. In case the opacity is 0%, the green rectangle cannot be seen at all. In the case of 100%, the overlapping areas are painted completely in green. In all other cases, the background still shines through to a certain degree, depending on how high the transparency is. As a result, the overlapping area of the two rectangles takes on a color that is somewhere "in-between" red and green.
+
+=== Premultiplied alpha
+Another important concept related to opacity is the distinction between _premultiplied_ vs. _non-premultiplied_ alpha. We now know that we can store the RGBA colors using four numbers, each number representing one channel. A fully green color with 50% opacity can be compactly represented using the tuple $(0.0, 1.0, 0.0, 0.5)$. Storing the alpha explicitly as a separate channel is referred to as _non-premultiplied alpha_ representation.
+
+However, as will be demonstrated in @compositing_and_blending, an issue is that many of the compositing formulas require multiplying the RGB channels with the alpha value. Redoing this computation every time is expensive, giving rise to the idea of performing this multiplication _ahead of time_ and storing the color implicitly with the alpha channel multiplied. This is referred to as _premultiplied alpha_ representation @image_compositing_fundamentals.
+
+For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert it into premultiplied representation we simply need to multiply the RGB channels with the alpha value, which results in the values $(0.0 * 0.5, 1.0 * 0.5, 0.0 * 0.5, 0.5) = (0.0, 0.5, 0.0, 0.5)$. Doing calculations using premultiplied alpha whenever possible is incredible important to ensure high performance, as it can drastically reduce the number of computations that need to be done per pixel.
+
+== Compositing and Blending <compositing_and_blending>
+
+== Complex Paints
+
 == Anti-aliasing
 
-== Colors
+=== Analytical anti-aliasing
 
-== Compositing and Blending
-
-== Paints
+=== Multi-sampled anti-aliasing
