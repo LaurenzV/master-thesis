@@ -215,12 +215,6 @@ Conceptually, gradients represent smooth transitions between two or multiple col
 
 Once we have a mapping from $t$ values to a color, we simply need to define another mapping from the $(x, y)$ position of a pixel to a $t$ value, so that we know how to color that pixel. There are three commonly used type of gradients that define this mapping in different ways: _Linear gradients_, _radial gradients_ and _sweep gradients_. Examples of applying those paint types to the shape of a butterfly can be seen in @gradients_butterfly.
 
-In the case of a linear gradient, we define a start and end point along which the gradient should interpolate. In the case of @butterfly_linear, the start point is in the top-left corner and the end point in the bottom-right corner. As a result of this, the visual result will be a linear variation of the gradient line in a diagonal direction.
-
-For radial gradients, we define the position and radius of a start circle as well as an end circle. In @butterfly_radial, the start and end circles are both positioned in the centers, while the start radius is set to 0 and the end radius to the maximum. The visual result of this gradient is a progression of the interpolated colors in a circular fashion, as if the inner circle "expanded" to the outer circle while varying the color.
-
-Finally, sweep gradients are colored by setting a center point as well as a start and end angle. In @butterfly_sweep, the center point has been set in the middle, and the radii are 0#sym.degree and 360#sym.degree respectively. In the end, the colors of the gradient line will vary as the angle of the position of the pixel from the center increases.
-
 #subpar.grid(
   figure(image("assets/butterfly_linear.svg"), caption: [
     Linear gradient.
@@ -239,17 +233,18 @@ Finally, sweep gradients are colored by setting a center point as well as a star
   columns: (1fr, 1fr, 1fr),
   caption: [The shape of a butterfly filled using a linear, radial and sweep gradient.],
   label: <gradients_butterfly>,
-  placement: auto,
 ) 
+
+In the case of a linear gradient, we define a start and end point along which the gradient should interpolate. In the case of @butterfly_linear, the start point is in the top-left corner and the end point in the bottom-right corner. As a result of this, the visual result will be a linear variation of the gradient line in a diagonal direction.
+
+For radial gradients, we define the position and radius of a start circle as well as an end circle. In @butterfly_radial, the start and end circles are both positioned in the centers, while the start radius is set to 0 and the end radius to the maximum. The visual result of this gradient is a progression of the interpolated colors in a circular fashion, as if the inner circle "expanded" to the outer circle while varying the color.
+
+Finally, sweep gradients are colored by setting a center point as well as a start and end angle. In @butterfly_sweep, the center point has been set in the middle, and the radii are 0#sym.degree and 360#sym.degree respectively. In the end, the colors of the gradient line will vary as the angle of the position of the pixel from the center increases.
 
 === Images
 As was mentioned in @rendering_intro, it is highly desirable to represent content as vector graphics whenever possible, as it allows for arbitrary scaling without any loss of precision. However, it is clear that this is not always the case. When browsing websites, you will often encounter images that have been stored as raster images with a specific pixel resolution, the reason for this is that many objects simply cannot be represented as vector graphics, like for example images taken with a camera.
 
 The fundamental difficulty of rendering images in 2D graphics is that the input image might not have the same resolution as it will have in the rendered image. For instance, if an input image has a resolution of 1000x800 pixels but our output display has a resolution of 1350x1080, we need to apply a scaling factor of 1.35 to the image for it to render correctly. To do this, we need to _resample_ the image to determine what color each pixel on the display should be to accurately reproduce the original image at the higher resolution. In order to achieve this, three methods are commonly used: _Nearest-neighbor interpolation_, _bilinear interpolation_ and _bicubic interpolation_ #cite(<digital_image_processing>, supplement: [p. 87-89]). @patterns_butterfly contrasts the different scaling methods using the 10x10 pixels input image in @input_image scaled by a factor of 50.
-
-In the case of nearest-neighbor interpolation, the algorithm is very straight-forward: It simply calculates the position of the new pixel in the old image by multiplying it with the inverse scale, and then samples the color value of the closest pixel. The result in @butterfly_nearest_neighbor shows that by using this interpolation method, the "block-like" structure of the original input image is preserved. In certain cases, this can be a desirable property (imagine for example rendering a heat map as it can be created with libraries like `matplotlib`, where you want to ensure that the individual cells retain their color), but in many cases, this interpolation method can cause artifacts, and is therefore not often used #cite(<digital_image_processing>, supplement: [p. 88]). The main advantage is that it is computationally very cheap.
-
-When performing bilinear interpolation, we do not only consider a single nearest neighbor, but actually the four nearest neighbors. We then assign a weight to each neighbor based on the exact location we are sampling and then interpolate across those 4 pixels. The same applies to bicubic interpolation, with the only difference that we consider 16 neighbors instead #cite(<digital_image_processing>, supplement: [p. 88]). The results for bilinear interpolation can be observed in @butterfly_bilinear, where the boundaries are much smoother due to the interpolation. At first glance, the bicubic interpolation in @butterfly_bicubic has a very similar effect to the bilinear interpolation in @butterfly_bilinear, but looking at it closer, it does become apparent that the bilinear version has some very subtle "star-like" artifacts in some places that are not present in the bicubic version. However, the cost for the slightly better quality is a much higher computational intensity per pixel.
 
 #subpar.grid(
   [], figure(image("assets/texture_nearest_neighbor.png", width: 30%), caption: [
@@ -272,11 +267,38 @@ figure(image("assets/butterfly_bilinear.svg"), caption: [
   columns: (1fr, 1fr, 1fr),
   caption: [The shape of a butterfly filled using a 50x scaled image using nearest-neighbor, bilinear and bicubic interpolation.],
   label: <patterns_butterfly>,
-  placement: auto,
+  placement: auto
 ) 
+
+In the case of nearest-neighbor interpolation, the algorithm is very straight-forward: It simply calculates the position of the new pixel in the old image by multiplying it with the inverse scale, and then samples the color value of the closest pixel. The result in @butterfly_nearest_neighbor shows that by using this interpolation method, the "block-like" structure of the original input image is preserved. In certain cases, this can be a desirable property (imagine for example rendering a heat map as it can be created with libraries like `matplotlib`, where you want to ensure that the individual cells retain their color), but in many cases, this interpolation method can cause artifacts, and is therefore not often used #cite(<digital_image_processing>, supplement: [p. 88]). The main advantage is that it is computationally very cheap.
+
+When performing bilinear interpolation, we do not only consider a single nearest neighbor, but actually the four nearest neighbors. We then assign a weight to each neighbor based on the exact location we are sampling and then interpolate across those 4 pixels. The same applies to bicubic interpolation, with the only difference that we consider 16 neighbors instead #cite(<digital_image_processing>, supplement: [p. 88]). The results for bilinear interpolation can be observed in @butterfly_bilinear, where the boundaries are much smoother due to the interpolation. At first glance, the bicubic interpolation in @butterfly_bicubic has a very similar effect to the bilinear interpolation in @butterfly_bilinear, but looking at it closer, it does become apparent that the bilinear version has some very subtle "star-like" artifacts in some places that are not present in the bicubic version. However, the cost for the slightly better quality is a much higher computational intensity per pixel.
 
 == Anti-aliasing
 
-=== Analytical anti-aliasing
+As was elaborated in @rendering_intro, the main goal of 2D rendering is to convert vector graphics into a pixel representation. However, a fundamental problem is that since vector graphics are defined in a continuous space, it is possible that certain parts of the shape only _partially_ cover a certain pixel, as can be seen for example in @butterfly_outlined. Since a pixel can only emit one specific color, there is no direct way of retaining that information after the conversion process. There are two ways this problem can be dealt with.
 
-=== Multi-sampled anti-aliasing
+#subpar.grid(
+figure(image("assets/butterfly_outlined_zoomed.pdf", width: 60%), caption: [
+    Examples of pixel coverages.
+  ]), <butterfly_outlined>,
+
+  grid(columns: (60%, 40%), [
+    #figure(image("assets/butterfly_anti_aliased.pdf"), caption: [
+    Rasterizing with anti-aliasing. #linebreak()  #linebreak()
+  ]) <butterfly_anti_aliased>
+  ],
+  [
+    #figure(image("assets/butterfly_no_anti_aliasing.pdf", width: 74%), caption: [
+    Rasterizing without anti-aliasing.
+  ]) <butterfly_aliased>
+  ],
+),
+  columns: (1fr),
+  caption: [A butterfly rasterized to a 20x20 screen with and without anti-aliasing.],
+  placement: auto,
+) <butterfly_rasterization>
+
+First, we can completely discard information about partial coverages and fully paint the pixel with the color if more than half of the pixel is covered, and not paint it at all in the other case. The result can be seen in @butterfly_aliased. By using this method, the resulting shape will look noticeable blocky. These artifacts are referred to as _aliasing artifacts_ @anti_aliasing_techniques and are usually undesirable. For example, when rendering text at a very low resolution, the letters might become very hard to read.
+
+Because of this, it is usually desirable to render with _anti-aliasing_ enabled. When looking at @butterfly_anti_aliased, it is apparent that the edges of the butterfly are much smoother and easier to look at. This effect is achieved by "simulating" the partial coverage of pixels by applying an additional opacity so that a certain part of the background shines through. In @butterfly_anti_aliased, all pixels that are strictly within the shape are still painted using a fully opaque, blue color, while edge pixels appear much lighter due to the additional opacity.
