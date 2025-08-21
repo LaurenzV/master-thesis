@@ -1,3 +1,1 @@
-= Conclusion
-
-#lorem(400)
+= Conclusion & Future Work <conclusion>

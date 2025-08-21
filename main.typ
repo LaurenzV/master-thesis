@@ -20,7 +20,6 @@
 
 #include "introduction.typ"
 #include "background/main.typ"
-#include "architecture.typ"
+#include "implementation.typ"
 #include "evaluation.typ"
-#include "future_work.typ"
 #include "conclusion.typ"

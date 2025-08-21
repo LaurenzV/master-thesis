@@ -2,7 +2,7 @@
 #import "../utils.typ": todo
 
 = Background <background>
-In this chapter, we will introduce some of the basic ideas and concepts of 2D rendering.
+In this chapter, we will introduce some of the basic notions of 2D rendering and explain a number of important concepts.
 
 == 2D rendering <rendering_intro>
 Nowadays, people mostly take it for granted that they can use their computers for various activities and interact with it seamlessly without any hiccups. This is possible thanks to a tight feedback loop, where users can observe the current _state_ of their system via their displays and based on this make decisions on what to do next by controlling their mouse and keyboard. For example, they expect to be able to navigate and scroll through web pages without significant delay. When writing an e-mail, the typed words should immediately show up on the display so that they can be seen and edited in the case of a typo.
@@ -201,11 +201,11 @@ However, as will be demonstrated in @compositing, an issue is that many of the c
 For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert it into premultiplied representation we simply need to multiply the RGB channels with the alpha value, which results in the values $(0.0 * 0.5, 1.0 * 0.5, 0.0 * 0.5, 0.5) = (0.0, 0.5, 0.0, 0.5)$. Doing calculations using premultiplied alpha whenever possible is incredible important to ensure high performance, as it can drastically reduce the number of computations that need to be done per pixel.
 
 == Compositing <compositing>
-
+#todo([Figure out how to summarize this briefly.])
 
 == Blending 
 
-#todo([Add section in blending? (probably not worth it)])
+#todo([Add section on blending? (probably not worth it)])
 
 == Clipping 
 
@@ -240,7 +240,7 @@ First, we can completely discard information about partial coverages and fully p
 
 Because of this, it is usually desirable to render with _anti-aliasing_ enabled. When looking at @butterfly_anti_aliased, it is apparent that the edges of the butterfly are much smoother and easier to look at. This effect is achieved by "simulating" the partial coverage of pixels by applying an additional opacity so that a certain part of the background shines through. In @butterfly_anti_aliased, all pixels that are strictly within the shape are still painted using a fully opaque, blue color, while edge pixels appear much lighter due to the additional opacity.
 
-It is worth highlighting that by doing the above, we are really _conflating_ two very distinct concepts: The alpha value of a color and the coverage of a pixel are not inherently related to each other, it just so happens that when rasterizing images, using color alpha to approximate pixel coverage usually works very well in practice. But, this approach isn't flawless and can lead to so-called _conflation-artifacts_ @gpu_path_rendering. The effects of this phenomenon can be observed in @conflation_figure, where we are drawing two fully opaque triangles that overlap each other. Since the green triangle completely overlaps the red one, there should be no visible red paint.
+It is worth highlighting that by doing the above, we are really _conflating_ two very distinct concepts: The alpha value of a color and the coverage of a pixel are not inherently related to each other, it just so happens that when rasterizing images, using color alpha to approximate pixel coverage usually works very well in practice. But, this approach isn't flawless and can lead to so-called _conflation-artifacts_ @gpu_accelerated_path_rendering. The effects of this phenomenon can be observed in @conflation_figure, where we are drawing two fully opaque triangles that overlap each other. Since the green triangle completely overlaps the red one, there should be no visible red paint.
 
 #figure(
   block(width: 60%, grid(
@@ -257,9 +257,7 @@ It is worth highlighting that by doing the above, we are really _conflating_ two
   caption: [Drawing and rasterizing two completely overlapping triangles.]
 ) <conflation_figure>
 
-However, upon rasterization, something different happens: When we first draw the red triangle, we use an opacity of 50% for the pixels that are only partially covered by the shape. The same happens when drawing the second triangle in green. The crucial detail here is that since we previously _converted_ pixel coverage to color opacities for the edge pixels, we will compose a green pixel with 50% opacity with a red pixel with 50% opacity, resulting in a brownish color along the edges instead of a fully green one.
-
-
+However, upon rasterization, something different happens: When we first draw the red triangle, we use an opacity of 50% for the pixels that are only partially covered by the shape. The same happens when drawing the second triangle in green. The crucial detail here is that since we previously _converted_ pixel coverage to color opacities for the edge pixels, we will compose a green pixel with 50% opacity on top of a red pixel with 50% opacity, resulting in a brownish color along the edges instead of a fully green one.
 
 == Complex Paints
 
