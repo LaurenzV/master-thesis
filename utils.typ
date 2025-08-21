@@ -3,3 +3,5 @@
   
   box(width: width)[#contents]
 }
+
+#let todo(t) = text(fill: red)[#strong[TODO: #t]]

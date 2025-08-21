@@ -1,4 +1,5 @@
 #import "@preview/subpar:0.2.2"
+#import "../utils.typ": todo
 
 = Background <background>
 In this chapter, we will introduce some of the basic ideas and concepts of 2D rendering.
@@ -195,11 +196,70 @@ The effect of varying the opacity can be observed @opacities-fig, where green re
 === Premultiplied alpha
 Another important concept related to opacity is the distinction between _premultiplied_ vs. _non-premultiplied_ alpha. We now know that we can store the RGBA colors using four numbers, each number representing one channel. A fully green color with 50% opacity can be compactly represented using the tuple $(0.0, 1.0, 0.0, 0.5)$. Storing the alpha explicitly as a separate channel is referred to as _non-premultiplied alpha_ representation.
 
-However, as will be demonstrated in @compositing_and_blending, an issue is that many of the compositing formulas require multiplying the RGB channels with the alpha value. Redoing this computation every time is expensive, giving rise to the idea of performing this multiplication _ahead of time_ and storing the color implicitly with the alpha channel multiplied. This is referred to as _premultiplied alpha_ representation @image_compositing_fundamentals.
+However, as will be demonstrated in @compositing, an issue is that many of the compositing formulas require multiplying the RGB channels with the alpha value. Redoing this computation every time is expensive, giving rise to the idea of performing this multiplication _ahead of time_ and storing the color implicitly with the alpha channel multiplied. This is referred to as _premultiplied alpha_ representation @image_compositing_fundamentals.
 
 For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert it into premultiplied representation we simply need to multiply the RGB channels with the alpha value, which results in the values $(0.0 * 0.5, 1.0 * 0.5, 0.0 * 0.5, 0.5) = (0.0, 0.5, 0.0, 0.5)$. Doing calculations using premultiplied alpha whenever possible is incredible important to ensure high performance, as it can drastically reduce the number of computations that need to be done per pixel.
 
-== Compositing and Blending <compositing_and_blending>
+== Compositing <compositing>
+
+
+== Blending 
+
+#todo([Add section in blending? (probably not worth it)])
+
+== Clipping 
+
+#todo([Add section on clipping? (perhaps worth it if we describe clipping in the main part, but low priority)])
+
+== Anti-aliasing
+
+As was elaborated in @rendering_intro, the main goal of 2D rendering is to convert vector graphics into a pixel representation. However, a fundamental problem is that since vector graphics are defined in a continuous space, it is possible that certain parts of the shape only _partially_ cover a certain pixel, as can be seen for example in @butterfly_outlined. Since a pixel can only emit one specific color, there is no direct way of retaining that information after the conversion process. There are two ways this problem can be dealt with.
+
+#subpar.grid(
+figure(image("assets/butterfly_outlined_zoomed.pdf", width: 60%), caption: [
+    Examples of pixel coverages.
+  ]), <butterfly_outlined>,
+
+  grid(columns: (60%, 40%), [
+    #figure(image("assets/butterfly_anti_aliased.pdf"), caption: [
+    Rasterizing with anti-aliasing. #linebreak()  #linebreak()
+  ]) <butterfly_anti_aliased>
+  ],
+  [
+    #figure(image("assets/butterfly_no_anti_aliasing.pdf", width: 74%), caption: [
+    Rasterizing without anti-aliasing.
+  ]) <butterfly_aliased>
+  ],
+),
+  columns: (1fr),
+  caption: [A butterfly rasterized to a 20x20 screen with and without anti-aliasing.],
+  placement: auto,
+) <butterfly_rasterization>
+
+First, we can completely discard information about partial coverages and fully paint the pixel with the color if more than half of the pixel is covered, and not paint it at all in the other case. The result can be seen in @butterfly_aliased. By using this method, the resulting shape will look noticeable blocky. These artifacts are referred to as _aliasing artifacts_ @anti_aliasing_techniques and are usually undesirable. For example, when rendering text at a very low resolution, the letters might become very hard to read.
+
+Because of this, it is usually desirable to render with _anti-aliasing_ enabled. When looking at @butterfly_anti_aliased, it is apparent that the edges of the butterfly are much smoother and easier to look at. This effect is achieved by "simulating" the partial coverage of pixels by applying an additional opacity so that a certain part of the background shines through. In @butterfly_anti_aliased, all pixels that are strictly within the shape are still painted using a fully opaque, blue color, while edge pixels appear much lighter due to the additional opacity.
+
+It is worth highlighting that by doing the above, we are really _conflating_ two very distinct concepts: The alpha value of a color and the coverage of a pixel are not inherently related to each other, it just so happens that when rasterizing images, using color alpha to approximate pixel coverage usually works very well in practice. But, this approach isn't flawless and can lead to so-called _conflation-artifacts_ @gpu_path_rendering. The effects of this phenomenon can be observed in @conflation_figure, where we are drawing two fully opaque triangles that overlap each other. Since the green triangle completely overlaps the red one, there should be no visible red paint.
+
+#figure(
+  block(width: 60%, grid(
+    row-gutter: 1em,
+    column-gutter: 1em,
+    columns: (1fr, 1fr, 1fr),
+    image("assets/triangle_grid.svg", width: 100%),
+    image("assets/triangle_red.svg", width: 100%),
+    image("assets/triangle_red_green.svg", width: 100%),
+    image("assets/triangle_grid.svg", width: 100%),
+    image("assets/triangle_raster_red.svg", width: 100%),
+    image("assets/triangle_raster_red_green.svg", width: 100%)
+  )),
+  caption: [Drawing and rasterizing two completely overlapping triangles.]
+) <conflation_figure>
+
+However, upon rasterization, something different happens: When we first draw the red triangle, we use an opacity of 50% for the pixels that are only partially covered by the shape. The same happens when drawing the second triangle in green. The crucial detail here is that since we previously _converted_ pixel coverage to color opacities for the edge pixels, we will compose a green pixel with 50% opacity with a red pixel with 50% opacity, resulting in a brownish color along the edges instead of a fully green one.
+
+
 
 == Complex Paints
 
@@ -273,32 +333,3 @@ figure(image("assets/butterfly_bilinear.svg"), caption: [
 In the case of nearest-neighbor interpolation, the algorithm is very straight-forward: It simply calculates the position of the new pixel in the old image by multiplying it with the inverse scale, and then samples the color value of the closest pixel. The result in @butterfly_nearest_neighbor shows that by using this interpolation method, the "block-like" structure of the original input image is preserved. In certain cases, this can be a desirable property (imagine for example rendering a heat map as it can be created with libraries like `matplotlib`, where you want to ensure that the individual cells retain their color), but in many cases, this interpolation method can cause artifacts, and is therefore not often used #cite(<digital_image_processing>, supplement: [p. 88]). The main advantage is that it is computationally very cheap.
 
 When performing bilinear interpolation, we do not only consider a single nearest neighbor, but actually the four nearest neighbors. We then assign a weight to each neighbor based on the exact location we are sampling and then interpolate across those 4 pixels. The same applies to bicubic interpolation, with the only difference that we consider 16 neighbors instead #cite(<digital_image_processing>, supplement: [p. 88]). The results for bilinear interpolation can be observed in @butterfly_bilinear, where the boundaries are much smoother due to the interpolation. At first glance, the bicubic interpolation in @butterfly_bicubic has a very similar effect to the bilinear interpolation in @butterfly_bilinear, but looking at it closer, it does become apparent that the bilinear version has some very subtle "star-like" artifacts in some places that are not present in the bicubic version. However, the cost for the slightly better quality is a much higher computational intensity per pixel.
-
-== Anti-aliasing
-
-As was elaborated in @rendering_intro, the main goal of 2D rendering is to convert vector graphics into a pixel representation. However, a fundamental problem is that since vector graphics are defined in a continuous space, it is possible that certain parts of the shape only _partially_ cover a certain pixel, as can be seen for example in @butterfly_outlined. Since a pixel can only emit one specific color, there is no direct way of retaining that information after the conversion process. There are two ways this problem can be dealt with.
-
-#subpar.grid(
-figure(image("assets/butterfly_outlined_zoomed.pdf", width: 60%), caption: [
-    Examples of pixel coverages.
-  ]), <butterfly_outlined>,
-
-  grid(columns: (60%, 40%), [
-    #figure(image("assets/butterfly_anti_aliased.pdf"), caption: [
-    Rasterizing with anti-aliasing. #linebreak()  #linebreak()
-  ]) <butterfly_anti_aliased>
-  ],
-  [
-    #figure(image("assets/butterfly_no_anti_aliasing.pdf", width: 74%), caption: [
-    Rasterizing without anti-aliasing.
-  ]) <butterfly_aliased>
-  ],
-),
-  columns: (1fr),
-  caption: [A butterfly rasterized to a 20x20 screen with and without anti-aliasing.],
-  placement: auto,
-) <butterfly_rasterization>
-
-First, we can completely discard information about partial coverages and fully paint the pixel with the color if more than half of the pixel is covered, and not paint it at all in the other case. The result can be seen in @butterfly_aliased. By using this method, the resulting shape will look noticeable blocky. These artifacts are referred to as _aliasing artifacts_ @anti_aliasing_techniques and are usually undesirable. For example, when rendering text at a very low resolution, the letters might become very hard to read.
-
-Because of this, it is usually desirable to render with _anti-aliasing_ enabled. When looking at @butterfly_anti_aliased, it is apparent that the edges of the butterfly are much smoother and easier to look at. This effect is achieved by "simulating" the partial coverage of pixels by applying an additional opacity so that a certain part of the background shines through. In @butterfly_anti_aliased, all pixels that are strictly within the shape are still painted using a fully opaque, blue color, while edge pixels appear much lighter due to the additional opacity.

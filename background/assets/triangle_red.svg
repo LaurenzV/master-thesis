@@ -1,0 +1,23 @@
+<svg viewBox="0 0 10 10" xmlns="http://www.w3.org/2000/svg">
+<path d="M0,1 L10,1" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M0,2 L10,2" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M0,3 L10,3" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M0,4 L10,4" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M0,5 L10,5" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M0,6 L10,6" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M0,7 L10,7" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M0,8 L10,8" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M0,9 L10,9" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M1,0 L1,10" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M2,0 L2,10" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M3,0 L3,10" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M4,0 L4,10" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M5,0 L5,10" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M6,0 L6,10" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M7,0 L7,10" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M8,0 L8,10" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+<path d="M9,0 L9,10" stroke="grey" stroke-opacity="0.3" stroke-width="0.1" vectorEffect="non-scaling-stroke"/>
+
+  <path d="M 0, 10 L 10, 0 L 10, 10 Z" fill="red" />
+    
+</svg>
