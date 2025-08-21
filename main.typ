@@ -1,4 +1,5 @@
 #import "template.typ": template
+#import "utils.typ": todo
 
 #let title = "High-performance 2D graphics rendering on the CPU using sparse strips"
 #let thesis_type = "Master Thesis"
@@ -23,3 +24,5 @@
 #include "implementation.typ"
 #include "evaluation.typ"
 #include "conclusion.typ"
+
+#todo[Somehow remark that this is a collaboration and what exactly my contributions were.]
