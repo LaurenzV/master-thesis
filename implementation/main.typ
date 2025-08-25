@@ -48,7 +48,9 @@ One of the interesting aspects of the design of Vello CPU is that it has a very 
   placement: auto,
 ) <overview_pipeline>
 
-As was shown in @api_example_Listing, the user starts by creating a render context and specifying drawing instructions, such as filling a rectangle or stroking a circle. The only difference between stroking and filling is that stroking requires an additional step called _stroke expansion_ in the beginning, which manipulates the input path in a way such that filling the new path has the same visual effect as stroking the old one. By doing this, we can treat filled and stroked paths the same in subsequent stages.
+The pipeline is illustrated in @api_example_Listing. Overall, the steps can be grouped into three categories: _Path rendering_, _coarse rasterization_ and _rasterization_. 
+
+The user starts by creating a render context and specifying drawing instructions, such as filling a rectangle or stroking a circle. The only difference between stroking and filling is that stroking requires an additional step called _stroke expansion_ in the beginning, which manipulates the input path in a way such that filling the new path has the same visual effect as stroking the old one. By doing this, we can treat filled and stroked paths the same in subsequent stages.
 
 The next stage is called _flattening_. As was mentioned in @drawing_primitives, the two basic primitives used for drawing are lines and curves. As part of this stage, the path is converted into a different representation such that the whole geometry is solely described by lines. Converting curves to lines is clearly a lossy operation since curves inherently cannot be represented completely accurately by just lines, but by using a large enough number of lines, the error in precision will be so small that it cannot be noticed in the final result. The advantage of this conversion step is that the follow-up stage in the pipeline only needs to process line primitives instead of curves _and_ lines, which greatly reduces the complexity.
 
@@ -91,7 +93,26 @@ As is outlined in #cite(<stroke_to_filled>, form: "prose"), stroke expansion is 
 Since implementing the stroke expansion logic was not explicitly part of this project, we will not dive into the internals of Kurbo's algorithm and leave it at this high-level description to give an intuition.
 
 == Flattening <flattening>
+Now that we have an expanded version of our stroke or a simple shape the user wants to fill (in the examples from now on, we will assume that we want to fill the butterfly instead of stroking it), we reach the next step in the pipeline: flattening. The idea of having this step is as follows: We want to convert our input shape, which consists of lines and curves, into a new representation which consists of just lines. By doing so, later steps in the pipeline only need to consider line segments as the basic building blocks, an assumption that will simplify the logic by a lot.
 
+#figure(
+  image("assets/butterfly_flattened.pdf"),
+  caption: [Parts of the butterfly shape flattened to lines. The red points indicate the start/end points of the line segments.]
+) <butterfly-flattened-fig>
+
+However, there is the problem that line segments clearly cannot accurately model curve segments. This can be seen in @butterfly-flattened-fig. While the flattened versions of the shape _overall_ still look curvy, zooming in makes it very apparent that it is really just a number of connected lines. For plain vector graphics, doing such a simplification would clearly be unacceptable. The crucial point here is that the simplification will be barely noticeable once the shape is rendered to pixels, because as part of the discretization process, the information whether a line or curve was used is completely lost; all that's left is an approximation of pixel coverage in the form of color opacity. And assuming that the number of used line segments is sufficiently large, the change in pixel coverage will be so small that it is unnoticeable with the naked eye.
+
+In order to achieve flattening of curves, we once again resort to the implementation that is provided in Kurbo @kurbo, which is based on an algorithm described in a blog post @flattening_quadratic_curves. Similarly to stroke expansion, the method for flattening takes a path with arbitrary curve and line segments as well as a _tolerance_ parameter as input. The tolerance parameter indicates what the maximum allowed error distance between a curve and its line approximation is and represents another set of trade-offs: Smaller tolerance will yield higher accuracy but result in more line segments, higher tolerance will result in less emitted lines but might cause noticeable artifacts when rendering. We once again settled on the value $0.25$ for this parameter, which means that the error distance can never be larger than one fourth of a pixel.
+
+The algorithm works roughly as follows: We iterate over each path segment and perform some operation on it. 
+
+In the case of lines, there is no work to be done and they can just be re-emitted as is.
+
+For quadratic curves, things start to get more interesting. One possible approach to flattening them would be doing a _recursive subdivision_, which means that we try to build a line between start and end point, and in case the maximum error is too large, we _subdivide_ our current curve in the center and perform the same operation recursively on both halves, until the spanned line of all subdivisions is within the given error bound @flattening_quadratic_curves. While this approach works, it has a tendency to generate more lines than necessary, a side effect that emerges from always religiously doing the subdivision in the center of the curve.
+
+The algorithm in the blog post instead presents a different approach that is based on mathematical analysis: We first calculate the number $n$ of line segments that are needed for the subdivision using an integral that is derived from a closed-form analytic expression, and only then determine the actual subdivision points by subdividing the interval into $n$ equal-spaced points and applying the inverse integral on them @flattening_quadratic_curves. The result will be an approximation that usually uses less line segments than the recursive subdivision approach.
+
+For cubic curves, the Kurbo implementation simply first approximates those by quadratic curves and then applies the same algorithm that was outlined above.
 
 == Tile generation <tile-generation>
 
