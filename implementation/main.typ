@@ -1,3 +1,6 @@
+#import "@preview/subpar:0.2.2"
+#import "../utils.typ": todo
+
 = Implementation <implementation>
 In this section, we will first showcase an example code snippet to demonstrate how Vello CPU's API works. Afterwards, the majority of the section will be dedicated to explaining each part of the rendering pipeline in Vello CPU. Finally we will illustrate how the pipeline was accelerated by employing SIMD and multi-threading.
 
@@ -61,7 +64,34 @@ Fine rasterization is where the actual "coloring" and compositing of pixels happ
 
 == Stroke expansion <stroke_expansion>
 
+In @fills-and-strokes, we mentioned that there are two types of drawing mode that need to be implemented: Filling and stroking. There are different ways in which stroking can be implemented. In our case, we decided to go with the so-called _stroke expansion_ approach. The basic idea is that we transform our original path description in such a way that applying a fill to that new path _visually_ has the same effect as stroking the original path. The idea is illustrated in figure @stroke-expansion-fig. If we want to draw a stroke with width 1, we compute two new _offset curves_ that are each offset by half the stroke width inward/outward. Filling this new shape results in a painted line of width 1 that is centered on the original outline description of the shape.
+
+#subpar.grid(
+  figure(image("assets/butterly_path.svg", width: 100%), caption: [
+    The butterfly shape. #linebreak() #linebreak()
+  ]),
+  figure(image("assets/butterfly_expanded.svg", width: 100%), caption: [
+    Expansion of stroke with width 1.
+  ]),
+  figure(image("assets/butterfly_colored.svg", width: 100%), caption: [
+    Filling of the expanded path.
+  ]),
+  columns: (1fr, 1fr, 1fr),
+  caption: [Reducing the problem of stroking a shape to the problem of filling it.],
+  label: <stroke-expansion-fig>,
+  placement: auto,
+)
+
+The main advantage of the stroke expansion approach is that it allows us to treat filled and stroked path in the exact same way in the whole rendering pipeline, allowing for a lot of simplification. The only difference is that stroked paths go through an additional step in the very beginning of the pipeline.
+
+Given that our renderer is implemented in Rust, we decided to use the Kurbo @kurbo library for this purpose, as it provides an implementation for stroke expansion. It takes a path description, the settings of the stroke as well as an _tolerance_ parameter as input, and returns expansion of the stroke as the output. The _tolerance_ parameter represents a trade-off that needs to be carefully balanced: Creating a mathematically completely accurate offset curve is not always possible. If we choose a lower tolerance, the expanded stroke will be more accurate, at the cost of containing more path segments, which ultimately means more work for later parts of the rendering pipeline. If we choose a higher tolerance, the expanded stroke will contain less segments, but the chance of visual artifacts being introduced is higher. In our case, we settled on a tolerance of $0.25$, which has so far be proven to be sufficient.
+
+As is outlined in #cite(<stroke_to_filled>, form: "prose"), stroke expansion is an incredibly complex and mathematically challenge problem to get right. One of the main difficulties is handling the various edge cases correctly, some of which even many of the mainstream renderers do not get right.
+
+Since implementing the stroke expansion logic was not explicitly part of this project, we will not dive into the internals of Kurbo's algorithm and leave it at this high-level description to give an intuition.
+
 == Flattening <flattening>
+
 
 == Tile generation <tile-generation>
 
@@ -76,4 +106,7 @@ Fine rasterization is where the actual "coloring" and compositing of pixels happ
 == SIMD <simd>
 
 == Multi-threading <mult-threading>
+
+== Comparison
+#todo[Do we want a section on this?]
 
