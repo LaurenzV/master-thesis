@@ -193,7 +193,13 @@ image("assets/butterfly_strip_areas_with_winding.svg",width: 50%),
   ) <butterfly-strip-areas-with-winding>
 
 == Calculating pixel-level winding number
-We know have encoded the information necessary to determine fully-painted areas in later stages of the pipeline, but we have yet to determine the opacity values of the pixels _inside_ of strips to apply anti-aliasing. In principle, we use a very similar approach to determining the strip-level winding number, with the main difference being that we are now considering rays intersecting individual _pixel rows_ and also fractional winding numbers.
+We know have encoded the information necessary to determine fully-painted areas in later stages of the pipeline, but we have yet to determine the opacity values of the pixels _inside_ of strips to apply anti-aliasing. In principle, we use a very similar approach to determining the strip-level winding number, with the main difference being that we are now considering rays intersecting individual _pixel rows_ and also considering _fractional_ winding numbers. The process is visualized in @strip-winding-numbers on the basis of the first strip in the first row.
+
+#figure(
+image("assets/strip_winding_numbers.pdf",width: 100%),
+    caption: [Calculating winding numbers of each pixel in a strip.],
+    placement: auto
+  ) <strip-winding-numbers>
 
 === Tile size
 
