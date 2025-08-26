@@ -1,0 +1,49 @@
+<svg viewBox="-3 -3 56, 56" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="1" id="p0" patternUnits="userSpaceOnUse" width="1" x="0" y="0">
+<path d="M0,0 L0,1" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+<path d="M0,0 L1,0" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+<path d="M0,1 L1,1" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+<path d="M1,0 L1,1" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+</pattern>
+</defs>
+<rect fill="url(#p0)" height="50" stroke="black" stroke-width="0.25" width="50" x="0" y="0"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="16" x="0" y="0"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="16" x="36" y="0"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="4" x="0" y="4"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="8" x="12" y="4"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="8" x="32" y="4"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="4" x="48" y="4"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="4" x="0" y="8"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="20" x="16" y="8"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="4" x="48" y="8"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="4" x="0" y="12"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="12" x="20" y="12"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="8" x="44" y="12"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="4" x="0" y="16"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="8" x="20" y="16"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="4" x="44" y="16"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="16" x="0" y="20"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="12" x="36" y="20"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="8" x="4" y="24"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="8" x="36" y="24"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="4" x="4" y="28"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="8" x="20" y="28"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="8" x="40" y="28"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="4" x="4" y="32"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="12" x="20" y="32"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="8" x="40" y="32"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="4" x="4" y="36"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="4" x="20" y="36"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="4" x="28" y="36"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="4" x="40" y="36"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="4" x="4" y="40"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="8" x="16" y="40"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="4" x="28" y="40"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="4" x="40" y="40"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="16" x="4" y="44"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="8" x="28" y="44"/>
+<rect fill="red" fill-opacity="0.4" height="4" stroke="red" stroke-opacity="0.6" stroke-width="0.2" width="4" x="40" y="44"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="8" x="8" y="48"/>
+<rect fill="limegreen" fill-opacity="0.4" height="4" stroke="limegreen" stroke-opacity="0.6" stroke-width="0.2" width="12" x="32" y="48"/>
+</svg>

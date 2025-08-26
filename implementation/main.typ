@@ -122,7 +122,7 @@ In order to do so, we conceptually segment our drawing area into smaller sub-are
 Then, we iterate over all lines in our input geometry and generate _one_ tile for each area that the line covers, as is illustrated in @generating-tiles. We do this by first calculating the bounding box of the line in tile coordinates, which in this case is 7x3 tiles. Then, we iterate over them in row-major order and calculate whether the line has any intersection point. If so, we generate a new tile, if not we, just ignore the location and proceed to the next location. 
 
 #figure(
-  image("assets/tile_line_example.svg", width: 90%),
+  image("assets/tile_line_example.svg", width: 70%),
   caption: [Generating tiles for a line.]
 ) <generating-tiles>
 
@@ -152,6 +152,50 @@ Applying this algorithm to our familiar butterfly shape, we end up with the repr
 As a final step, we sort our buffer that stores all tiles first by ascending y-coordinate and then by ascending x-coordinate to ensure that they are stored in row-major order. In order to do so, we use the `sort_unstable` method provided by the Rust standard library.
 
 == Strips generation <strips-generation>
+We know arrive at the most integral part of the pipeline, namely strip generation. There are a lot of details and subtleties to unpack here, and it is therefore worth re-exploring the original motivation before diving into the implementation.
+
+=== Motivation
+When rendering a shape, there are two types of computations that may be performed:
++ For pixels strictly inside of the shape, not a lot of work needs to be done. We just need to set the value of the pixel to the given color. This is computationally speaking relatively cheap.
++ For pixels on the edge, more work needs to be done: We need to check how the line intersects the pixel and then calculate the area coverage in order to determine the correct opacity for anti-aliasing. This is clearly a much more expensive operation, and we therefore want to limit this operation to the pixels where it's really necessary.
+
+One of the core goals of strip generation is to calculate the opacity values for all pixels that could potentially be affected by anti-aliasing. However, in addition to that, we group the pixels in a smart way and store additional "metadata" such that we can store all the information that is needed to reproduce the necessary information for rendering (which includes the opacity values for anti-aliased pixels as well as information about which areas should be completely filled). The key innovation is that this happens in a storage-efficient way. Normally, if you wanted to store an image with 256 in each dimension in RGBA format using 8-bit unsigned integers, you would need $256 * 256 * 4  #sym.approx 262$ kilobytes of storage. If you increase this to 512 pixels, you end up with around one megabyte, so the storage requirement increases quadratically as the base size increases.
+
+In contrast, using our method, the factor of $4$ completely falls away since we are not storing RGBA values but just single opacity values between $0$ and $255$. In addition to that, even when scaling an image in both directions, the number of _anti-aliased pixels_ tends to increase linearly instead of quadratically, resulting in much lighter storage requirements.
+
+=== Merging strips
+The first step of the algorithm is relatively straight-forward: We iterate over all tiles (remember that they are already sorted in row-major order!), and merge horizontally-adjacent tiles into single _strips_. These strips have the same height as the tiles, but the width can vary depending on how many adjacent tiles there are, as is visualized in @butterfly-strip-areas. The blue colored strips represent any area where we will explicitly calculate opacity values for anti-aliasing. Any pixel not falling within a strip will _not_ be explicitly stored and is represented implicitly.
+
+#figure(
+image("assets/butterfly_strip_areas.svg",width: 50%),
+  caption: [The areas of the generated strips.]
+) <butterfly-strip-areas>
+
+=== Calculating coarse winding numbers
+
+However, generating the merged strips is only a small part of the equation. The next step is understanding how we can encode the strips so that in later stages of the pipeline, we can easily determine which areas between the strips should be filled and which ones should not. In order to understand how this works, we need to remind ourselves about the concept of winding numbers as they were introduced in @fill_rules: Conceptually, we shoot a ray into any direction and increase or decrease a winding number counter each time we intersect a line of the path depending on the direction of the line. In our case, there are actually two different winding numbers that we need to keep track of. 
+
+The first winding number is the _coarse winding number_ and defined at the strip level. For each strip, we shoot a ray from the very left of the row to the very right at the very top of the strip. Each time we intersect a line (remember that for each tile, we store a boolean flag with that information, allowing us to easily check that), we use add this to the winding number of the _next_ strip. 
+
+#figure(
+image("assets/butterfly_coarse_winding_number.svg", width: 100%),
+caption: [Calculating the coarse winding number for each strip in a row.]
+) <coarse-winding-fig>
+
+@coarse-winding-fig Shows an example of doing this computation. The first strip on the very left has a start winding number of 0, as it's the leftmost part of the shape on this row. Inside of this strip, we have one tile that has a line intersection at the top. The line is defined from bottom to top, meaning that from the perspective of our imaginary ray, the intersection direction is right-to-left, and thus we _decrease_ our winding counter to -1. Since there are no further intersection in this strip, the coarse winding number of the next strip will be set to -1. The strip in the center first has a left-to-right intersection, meaning that our winding counter is temporarily reset to 0. But in the end, we have yet another intersection in the opposite direction, and therefore, the start winding number of that last strip is going to be -1 as well.
+
+We run this computation for all rows containing strips to assign each strip its coarse winding number. To more easily visualize this, we can now color the strips according to the fill rule: If the coarse winding number of a strip is zero, we color it in green, otherwise we color it in red. The result is illustrated in @butterfly-strip-areas-with-winding. Note in particular that just encoding the winding number in each strip is enough information to later on infer which non-covered areas should be fully painted and which ones should not! For every non-covered gap, if the strip on the _right_ side has a non-zero winding number, the whole area is painted, otherwise it is not painted. For example, the gap in the first row in @butterfly-strip-areas-with-winding will not be painted since the strip on the very right has a winding number of 0. However, in the third row, both areas will be painted since the strips on the right of each gap have a non-zero winding number. Mentally applying this idea to each row, it becomes evident that this approach is sufficient to later on determine which areas need to be painted, solely based on the encoded information in the sparse strips!
+
+#figure(
+image("assets/butterfly_strip_areas_with_winding.svg",width: 50%),
+    caption: [The areas of the generated strips, with the strips painted according to their winding number.],
+    placement: auto
+  ) <butterfly-strip-areas-with-winding>
+
+== Calculating pixel-level winding number
+We know have encoded the information necessary to determine fully-painted areas in later stages of the pipeline, but we have yet to determine the opacity values of the pixels _inside_ of strips to apply anti-aliasing. In principle, we use a very similar approach to determining the strip-level winding number, with the main difference being that we are now considering rays intersecting individual _pixel rows_ and also fractional winding numbers.
+
+=== Tile size
 
 == Coarse rasterization <coarse-rasterization>
 
