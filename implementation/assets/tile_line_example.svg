@@ -1,0 +1,25 @@
+<svg viewBox="-1 -1 30, 14" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="1" id="p0" patternUnits="userSpaceOnUse" width="1" x="0" y="0">
+<path d="M0,0 L0,1" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+<path d="M0,0 L1,0" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+<path d="M0,1 L1,1" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+<path d="M1,0 L1,1" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+</pattern>
+</defs>
+<rect fill="url(#p0)" height="12" stroke="black" stroke-width="0.25" width="28" x="0" y="0"/>
+<line fill="none" fill-opacity="0.1" stroke="black" stroke-width="0.1" x1="1" x2="25" y1="1" y2="9"/>
+<line fill="none" fill-opacity="0.1" stroke="black" stroke-width="0.1" x1="25" x2="1" y1="9" y2="1"/>
+<rect fill="darkblue" fill-opacity="0.1" height="4" stroke="darkblue" stroke-opacity="1" stroke-width="0.2" width="4" x="0" y="0"/>
+<rect fill="darkblue" fill-opacity="0.1" height="4" stroke="darkblue" stroke-opacity="1" stroke-width="0.2" width="4" x="4" y="0"/>
+<rect fill="darkblue" fill-opacity="0.1" height="4" stroke="darkblue" stroke-opacity="1" stroke-width="0.2" width="4" x="8" y="0"/>
+<rect fill="darkblue" fill-opacity="0.1" height="4" stroke="darkblue" stroke-opacity="1" stroke-width="0.2" width="4" x="8" y="4"/>
+<rect fill="darkblue" fill-opacity="0.1" height="4" stroke="darkblue" stroke-opacity="1" stroke-width="0.2" width="4" x="12" y="4"/>
+<rect fill="darkblue" fill-opacity="0.1" height="4" stroke="darkblue" stroke-opacity="1" stroke-width="0.2" width="4" x="16" y="4"/>
+<rect fill="darkblue" fill-opacity="0.1" height="4" stroke="darkblue" stroke-opacity="1" stroke-width="0.2" width="4" x="20" y="4"/>
+<rect fill="darkblue" fill-opacity="0.1" height="4" stroke="darkblue" stroke-opacity="1" stroke-width="0.2" width="4" x="20" y="8"/>
+<rect fill="darkblue" fill-opacity="0.1" height="4" stroke="darkblue" stroke-opacity="1" stroke-width="0.2" width="4" x="24" y="8"/>
+
+<circle cx="10" cy="4" fill="yellow" fill-opacity="1.0" r="0.3"/>
+<circle cx="22" cy="8" fill="yellow" fill-opacity="1.0" r="0.3"/>
+</svg>

@@ -115,6 +115,41 @@ The algorithm in the blog post instead presents a different approach that is bas
 For cubic curves, the Kurbo implementation simply first approximates those by quadratic curves and then applies the same algorithm that was outlined above.
 
 == Tile generation <tile-generation>
+After we converted the shape into flattened lines, the next step is tile generation. The main purpose of tile generation is to determine the areas on the canvas that could _potentially_ be affected by anti-aliasing. An area _can_ have anti-aliasing if and only if a line crosses through that area, as anti-aliasing is a phenomenon that is only triggered by the edges of shape contours.
+
+In order to do so, we conceptually segment our drawing area into smaller sub-areas of size 4x4 pixels. Note that there is no inherent reason why we _have_ to choose this specific size, and we could also opt to choose a size like 2x2 or 8x8 pixels instead. However, there is a complex trade-off to balance here which will be elaborated further in section @strips-generation.
+
+Then, we iterate over all lines in our input geometry and generate _one_ tile for each area that the line covers, as is illustrated in @generating-tiles. We do this by first calculating the bounding box of the line in tile coordinates, which in this case is 7x3 tiles. Then, we iterate over them in row-major order and calculate whether the line has any intersection point. If so, we generate a new tile, if not we, just ignore the location and proceed to the next location. 
+
+#figure(
+  image("assets/tile_line_example.svg", width: 90%),
+  caption: [Generating tiles for a line.]
+) <generating-tiles>
+
+#figure(
+  [
+    ```rs
+struct Tile {
+    x: u16,
+    y: u16,
+    line: Line,
+    has_winding: bool
+}
+    ```
+  ],
+  caption: [The information stored inside of a tile.],
+) <tile-fields>
+
+The information that is stored for each tile is shown in @tile-fields. One the one hand, we store the x and y coordinates (in tile coordinates instead of pixel coordinates), but on the other hand, we also keep track of the line associated with the tile. We also store a special boolean flag `has_winding` which will be activated for any tile where the line intersects the top of the tile, as indicated by the yellow points in @generating-tiles. This information will be needed later.
+
+Applying this algorithm to our familiar butterfly shape, we end up with the representation in @butterfly-tiles. There are two aspects worth highlighting: First and foremost, it is _not_ the case that one location can only have one tile. We generate one tile for _each_ line at a certain location, meaning that multiple tiles can be generated if multiple lines cover the same tile square. And secondly, note how this representation really achieves our initial goal: Any pixel that could potentially have anti-aliasing is strictly contained within a tiled region. Any area that is not covered by a tile is either strictly within the shape, and thus will always be painted fully, or strictly outside of the shape and should therefore not be painted at all.
+
+#figure(
+  image("assets/butterfly_tiles.pdf", width: 70%),
+  caption: [The generated tiles for the butterfly shape. Each line segment generates at least a tile, meaning that there can be multiple overlapping tiles at the same location.]
+) <butterfly-tiles>
+
+As a final step, we sort our buffer that stores all tiles first by ascending y-coordinate and then by ascending x-coordinate to ensure that they are stored in row-major order. In order to do so, we use the `sort_unstable` method provided by the Rust standard library.
 
 == Strips generation <strips-generation>
 
