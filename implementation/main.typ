@@ -228,6 +228,25 @@ struct Strip {
 With the sparse strip representation concluded, the path rendering stage of the pipeline (as shown in @overview_pipeline) concludes. There are many different things that can now be done with that intermediate representation. On the one hand, we can pass it on to the next stage to commence the actual rasterization process. On the other hand, we could for example store the path for caching purposes so that it can be reused in the future without having to redo all of the calculations.
 
 === Tile size
+Initially, it was claimed that the point of strip rendering is to only calculate the opacities of _anti-aliased pixels_. However, looking at @butterfly-all-strips, it becomes apparent that this is not entirely true: There are many pixels that either have full opacity or no opacity at all and are therefore not at all anti-aliased. They were only included by virtue of being in the _vicinity_ of anti-aliased and being part of the same tile.
+
+#figure(
+  block(width: 70%)[
+    #grid(
+    row-gutter: 3mm,
+    column-gutter: 3mm,
+    columns: (1fr, 1fr),
+    image("assets/butterfly_tile_size_1.svg", width: 100%),
+    image("assets/butterfly_tile_size_2.svg", width: 100%),
+    image("assets/butterfly_tile_size_4.svg", width: 100%),
+    image("assets/butterfly_tile_size_8.svg", width: 100%),
+  )
+  ],
+  caption: [The butterfly processed with tile sizes 1, 2, 4 and 8.],
+  placement: auto
+) <butterfly-tile-sizes>
+
+In principle, it is very much possible to use different tile sizes, as is shown in @butterfly-tile-sizes. However, both, increasing and decreasing the tile sizes come with their own caveats. In the case of 8x8 pixels, we overall have less tiles which means lower overhead when generating and sorting them. However, the disadvantage is that our tiles cover _many more_ non-anti-aliased pixels, implying higher memory requirements and also many more pixel-level anti-aliasing computations which are expensive. using tile sizes of 1 and 2 on the other hand _reduce_ the number of performed anti-aliasing computations, but the downside is that the bottleneck will instead shift toward tile generation and sorting. A tile size of 4 is a good balance; the tiles are not too large and therefore do not perform too many unnecessary anti-aliasing computations and reduce the sparseness of the representation, but also not too small, resulting in reasonable performance during tile generation. In addition to that, as will be demonstrated in @simd, a tile size of 4 hits the sweet spot for efficient SIMD optimizations.
 
 == Coarse rasterization <coarse-rasterization>
 
