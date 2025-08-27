@@ -249,6 +249,47 @@ Initially, it was claimed that the point of strip rendering is to only calculate
 In principle, it is very much possible to use different tile sizes, as is shown in @butterfly-tile-sizes. However, both, increasing and decreasing the tile sizes come with their own caveats. In the case of 8x8 pixels, we overall have less tiles which means lower overhead when generating and sorting them. However, the disadvantage is that our tiles cover _many more_ non-anti-aliased pixels, implying higher memory requirements and also many more pixel-level anti-aliasing computations which are expensive. using tile sizes of 1 and 2 on the other hand _reduce_ the number of performed anti-aliasing computations, but the downside is that the bottleneck will instead shift toward tile generation and sorting. A tile size of 4 is a good balance; the tiles are not too large and therefore do not perform too many unnecessary anti-aliasing computations and reduce the sparseness of the representation, but also not too small, resulting in reasonable performance during tile generation. In addition to that, as will be demonstrated in @simd, a tile size of 4 hits the sweet spot for efficient SIMD optimizations.
 
 == Coarse rasterization <coarse-rasterization>
+Coarse rasterization serves as a preparatory step before actually rendering the shape into a pixmap. We start by conceptually splitting the complete drawing area into into so-called _wide tiles_ (to be distinguished from the 4x4 tiles introduced earlier) which always have a dimension of 256x4 pixels. For example, in case we are rendering to a 50x50 screen, we would have $ceil(50 / 256) * ceil(50 / 4) = 13$ wide tiles in total. If we increase the width to 312, we instead end up with $ceil(312 / 256) * ceil(50 / 4) = 26$ wide tiles.
+
+Each wide tile contains an (initially empty) vector of commands that represent rendering instructions. As can be seen in @wide-commands, we distinguish between two main commands: _Fill_ and _alpha fill_ commands.
+
+#figure(
+  grid(
+    columns: (1fr, 1fr),
+    ```rs
+struct CmdFill {
+    x: u16,
+    width: u16,
+    paint: Paint,
+    blend_mode: Option<BlendMode>
+}
+    ```,
+    ```rs
+struct CmdAlphaFill {
+    x: u16,
+    width: u16,
+    alpha_idx: usize,
+    paint: Paint,
+    blend_mode: Option<BlendMode>
+}
+    ```
+  ),
+  caption: [The structure of of fill and alpha fill commands.]
+) <wide-commands>
+
+They are very similar and mostly contain the same fields: The `x` field indicates the horizontal starting position of the command and the width how many pixels it spans horizontally. Note that there is no need to store a `y` coordinate, as a command always applies to the full height of the wide tile it is stored in. The `paint` indicates the actual color with which the pixels should be painted with. It can either be a solid color, or a complex plaint like from a gradient or a bitmap image. Finally, the blend mode indicates which composition operator and mix should be used when blending the color of the pixel into the background. The only difference lies in the fact that alpha fills have an additional field `alpha_idx`, which should make their difference more clear: Normal fill commands are used for filling the areas _in-between_ strips where there is no-anti-aliasing, while alpha fill commands are used for the regions inside of strips which require an additional opacity factor to be applied.
+
+We now need to process the sparse strips representation of our path to generate the appropriate commands. Conceptually, this is not difficult as each row of strips has a 1:1 correspondence to a row of wide tiles, and we can therefore operate on a row basis. @wide-tile-gen demonstrates this for the second row of strips of our butterfly.
+
+#figure(
+  image("assets/wide_tile_commands.pdf"),
+  caption: [Generating wide tile commands for a row of strips. Yellow rectangles represent the strips, red ones the implicitly to-be-filled areas. The `paint` and `blend_mode` fields have been omitted for brevity.],
+  placement: auto
+) <wide-tile-gen>
+
+For strips, we more or less just need to copy the `x` and `alpha_idx` properties of the corresponding strip and calculate the implicitly represented width to generate a new alpha fill command. For the gaps between strips, we proceed as previously outlined: In case the right strip has a coarse winding number that requires filling, we generate a corresponding fill command, as is the case for the gap between strip 1 and 2 as well as strip 3 and 4. Otherwise, we simply leave the area untouched, like for example the gap between strip 2 and 3. 
+
+The whole procedure is performed for all wide tile rows, until all commands have been generated. Once this is done, the first phase of rendering is completed and control is handed back to the user. Either, the user decides to render additional paths, in which case the whole cycle of path rendering is repeated and more drawing commands will be pushed to the wide tiles, or the user decides to finalize the process by kicking off the rasterization process via a call to `render_to_pixmap`.
 
 == Fine rasterization <fine_rasterization>
 
