@@ -122,7 +122,7 @@ In order to do so, we conceptually segment our drawing area into smaller sub-are
 Then, we iterate over all lines in our input geometry and generate _one_ tile for each area that the line covers, as is illustrated in @generating-tiles. We do this by first calculating the bounding box of the line in tile coordinates, which in this case is 7x3 tiles. Then, we iterate over them in row-major order and calculate whether the line has any intersection point. If so, we generate a new tile, if not we, just ignore the location and proceed to the next location. 
 
 #figure(
-  image("assets/tile_line_example.svg", width: 70%),
+  image("assets/tile_line_example.svg", width: 60%),
   caption: [Generating tiles for a line.]
 ) <generating-tiles>
 
@@ -145,7 +145,7 @@ The information that is stored for each tile is shown in @tile-fields. One the o
 Applying this algorithm to our familiar butterfly shape, we end up with the representation in @butterfly-tiles. There are two aspects worth highlighting: First and foremost, it is _not_ the case that one location can only have one tile. We generate one tile for _each_ line at a certain location, meaning that multiple tiles can be generated if multiple lines cover the same tile square. And secondly, note how this representation really achieves our initial goal: Any pixel that could potentially have anti-aliasing is strictly contained within a tiled region. Any area that is not covered by a tile is either strictly within the shape, and thus will always be painted fully, or strictly outside of the shape and should therefore not be painted at all.
 
 #figure(
-  image("assets/butterfly_tiles.pdf", width: 70%),
+  image("assets/butterfly_tiles.pdf", width: 60%),
   caption: [The generated tiles for the butterfly shape. Each line segment generates at least a tile, meaning that there can be multiple overlapping tiles at the same location.]
 ) <butterfly-tiles>
 
@@ -167,7 +167,7 @@ In contrast, using our method, the factor of $4$ completely falls away since we 
 The first step of the algorithm is relatively straight-forward: We iterate over all tiles (remember that they are already sorted in row-major order!), and merge horizontally-adjacent tiles into single _strips_. These strips have the same height as the tiles, but the width can vary depending on how many adjacent tiles there are, as is visualized in @butterfly-strip-areas. The blue colored strips represent any area where we will explicitly calculate opacity values for anti-aliasing. Any pixel not falling within a strip will _not_ be explicitly stored and is represented implicitly.
 
 #figure(
-image("assets/butterfly_strip_areas.svg",width: 50%),
+image("assets/butterfly_strip_areas.svg",width: 40%),
   caption: [The areas of the generated strips.]
 ) <butterfly-strip-areas>
 
@@ -187,7 +187,7 @@ caption: [Calculating the coarse winding number for each strip in a row.]
 We run this computation for all rows containing strips to assign each strip its coarse winding number. To more easily visualize this, we can now color the strips according to the fill rule: If the coarse winding number of a strip is zero, we color it in green, otherwise we color it in red. The result is illustrated in @butterfly-strip-areas-with-winding. Note in particular that just encoding the winding number in each strip is enough information to later on infer which non-covered areas should be fully painted and which ones should not! For every non-covered gap, if the strip on the _right_ side has a non-zero winding number, the whole area is painted, otherwise it is not painted. For example, the gap in the first row in @butterfly-strip-areas-with-winding will not be painted since the strip on the very right has a winding number of 0. However, in the third row, both areas will be painted since the strips on the right of each gap have a non-zero winding number. Mentally applying this idea to each row, it becomes evident that this approach is sufficient to later on determine which areas need to be painted, solely based on the encoded information in the sparse strips!
 
 #figure(
-image("assets/butterfly_strip_areas_with_winding.svg",width: 50%),
+image("assets/butterfly_strip_areas_with_winding.svg",width: 35%),
     caption: [The areas of the generated strips, with the strips painted according to their winding number.],
     placement: auto
   ) <butterfly-strip-areas-with-winding>
@@ -196,10 +196,36 @@ image("assets/butterfly_strip_areas_with_winding.svg",width: 50%),
 We know have encoded the information necessary to determine fully-painted areas in later stages of the pipeline, but we have yet to determine the opacity values of the pixels _inside_ of strips to apply anti-aliasing. In principle, we use a very similar approach to determining the strip-level winding number, with the main difference being that we are now considering rays intersecting individual _pixel rows_ and also considering _fractional_ winding numbers. The process is visualized in @strip-winding-numbers on the basis of the first strip in the first row.
 
 #figure(
-image("assets/strip_winding_numbers.pdf",width: 100%),
+image("assets/strip_winding_numbers.pdf", width: 85%),
     caption: [Calculating winding numbers of each pixel in a strip.],
     placement: auto
   ) <strip-winding-numbers>
+
+For each strip, we once again look at its constituent tile regions. We initialize a temporary array of 16 floating point numbers to the value 0.0 and store it in *column-major* (the reasoning behind this will be elaborated in @fine_rasterization) order. We then iterate over all tiles in the given tile region and compute the trapezoidal area that is spanned between the line and the right edge of the tile. For each pixel, we then simply calculate the fraction of its area that is covered by the trapezoid. Note that the usual rules apply, where the area can also be _negative_ depending on the direction the line intersects the pixels with. We then sum the fractional windings of all tiles in the same region into our temporary array, until we end up with the final winding number. Next, we convert the winding numbers into opacities between 0.0 and 1.0 by applying the fill rule and scale them by 255 so that we can store them as 8-bit unsigned integers. The array of the 16 opacity values is then pushed out into a buffer and the whole process is restarted for the next tile area in the strip. Doing this for all strips, we end up with the representation that is shown in @butterfly-all-strips.
+
+#figure(
+  image("assets/butterfly_all_strips.svg", width: 35%),
+  caption: [The opacity values for all strips. Completely black pixels represent 100% opacity, white pixels 0%, shades of grey intermediate values.],
+  placement: auto,
+) <butterfly-all-strips>
+
+Thinking about this more carefully, it should now be clear that we have all the information needed to fully draw the complete shape. We have calculated the opacity values of all anti-aliased pixels and represent to-be-filled areas in an implicit way, just by storing a `Vec<Strip>` that represents the whole rasterized geometry of a single shape. As can be seen in @strip-fields, a strip only needs to store its start position x and y positions, its _coarse_ winding number as well as an index into the global alpha buffer pointing to the first element, where all opacity values for _all_ strips are stored. Note in particular that there is no need to explicitly store the width of the strip, as it can be inferred by looking at the `alpha_idx` of the next strip. For example, if one strip has an alpha index of 80 and the next strip an index of 160, the width of the strip is $(160 - 80) / 4 = 20$, since a strip always has a height of 4.
+
+#figure(
+  [
+    ```rs
+struct Strip {
+    x: u16,
+    y: u16,
+    alpha_idx: u32,
+    winding: i32,
+}
+    ```
+  ],
+  caption: [The information stored inside of a strip.],
+) <strip-fields>
+
+With the sparse strip representation concluded, the path rendering stage of the pipeline (as shown in @overview_pipeline) concludes. There are many different things that can now be done with that intermediate representation. On the one hand, we can pass it on to the next stage to commence the actual rasterization process. On the other hand, we could for example store the path for caching purposes so that it can be reused in the future without having to redo all of the calculations.
 
 === Tile size
 
