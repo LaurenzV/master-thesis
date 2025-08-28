@@ -192,7 +192,7 @@ image("assets/butterfly_strip_areas_with_winding.svg",width: 35%),
     placement: auto
   ) <butterfly-strip-areas-with-winding>
 
-== Calculating pixel-level winding number
+=== Calculating pixel-level winding number
 We know have encoded the information necessary to determine fully-painted areas in later stages of the pipeline, but we have yet to determine the opacity values of the pixels _inside_ of strips to apply anti-aliasing. In principle, we use a very similar approach to determining the strip-level winding number, with the main difference being that we are now considering rays intersecting individual _pixel rows_ and also considering _fractional_ winding numbers. The process is visualized in @strip-winding-numbers on the basis of the first strip in the first row.
 
 #figure(
@@ -210,6 +210,8 @@ For each strip, we once again look at its constituent tile regions. We initializ
 ) <butterfly-all-strips>
 
 Thinking about this more carefully, it should now be clear that we have all the information needed to fully draw the complete shape. We have calculated the opacity values of all anti-aliased pixels and represent to-be-filled areas in an implicit way, just by storing a `Vec<Strip>` that represents the whole rasterized geometry of a single shape. As can be seen in @strip-fields, a strip only needs to store its start position x and y positions, its _coarse_ winding number as well as an index into the global alpha buffer pointing to the first element, where all opacity values for _all_ strips are stored. Note in particular that there is no need to explicitly store the width of the strip, as it can be inferred by looking at the `alpha_idx` of the next strip. For example, if one strip has an alpha index of 80 and the next strip an index of 160, the width of the strip is $(160 - 80) / 4 = 20$, since a strip always has a height of 4.
+
+#todo[Mention that winding number depends on left neighbor pixel]
 
 #figure(
   [
@@ -302,6 +304,8 @@ After completing fine rasterization, each wide tile stores a buffer of RGBA valu
 
 To address these points, there is a final stage called _packing_. As part of this, we iterate over all wide tiles and copy each pixel in their buffer to the appropriate location in the user-supplied `Pixmap`. In case the values are stored as f32, we multiply the values by 255 and then round them to the appropriate `u8` values. Once this done, all pixels are stored in the pixmap as premultiplied RGBA values and the user can process them further, for example by encoding the pixels into a PNG file and storing it to disk.
 
+#todo[mention size of pixmap]
+
 == SIMD <simd>
 In order to achieve the best performance, implementing SIMD optimizations is indispensable. In many cases, it can be sufficient to rely on autovectorization for that purpose, but in our case this is unsatisfactory for two reasons: Firstly, while the compiler often does a very good job at detecting auto-vectorization opportunities, it does not do so 100% reliably and making the intended vectorizations explicit by using SIMD intrinsics is therefore more desirable. Secondly, since the Rust compiler by default needs to produce portable code, it can often only rely on a very reduced set of SIMD intrinsics. For example, in order to instruct the compiler to make use of AVX2 feature, you need to explicitly enable the `avx2` target feature, as a result of which the compiled code cannot be run on x86 devices that do not support these instructions.
 
@@ -372,6 +376,15 @@ impl Simd for Neon {
 Using these capabilities, we can define the main functions in Vello CPU to be generic over the `Simd` trait which allows us to implement them in a platform-agnostic way while still leveraging SIMD capabilities.
 
 === Implementation
+Certain parts of the pipeline (such as coarse rasterization) are not obiously SIMD-optimizeable and would only benefit very little from it, if at all. However, the main stages are fortunately very much amenable to such optimizations and profit vastly from it. A major focus was therefore rewriting the existing parts of the pipeline to make use of SIMD capabilities. At the time of writing, the flattening, strips generation, fine rasterization as well as packing stages are SIMD-optimized. The last remaining candidate that could _potentially_ profit from such optimizations would be stroke expansion, but this has not been implemented yet.
+
+For the flattening stage, the SIMD optimization only applies to cubic curves. As was explained in @flattening, cubic curves are flattened by first approximating them by multiple quadratic curves and then flattening each quadratic curve. What we therefore do is first compute the number of necessary quadratic curves and then flatten multiple quadratic curves _in parallel_ by using vectors to store the intermediate results of each curve at the same time. Our benchmarks confirmed that this has a noticeably positive impact on performance, as the original implementation of flattening on kurbo was written in a way that makes it very hard to auto-vectorize for the compiler, and also operated on `f64` instead of `f32` values.
+
+For strips generation, the vectorization is conceptually also relatively simple. Remember that the bulk of the work in this stage comes from iterating over all 4x4 tiles in a strip, calculating their winding number and then converting them into `u8` opacities. Important to understand here is that the winding number of each pixel in a row is only dependent on the winding number of _its left neighbor_. There are no dependencies whatsoever in the vertical direction. Since strips always have a fixed height of 4, we can therefore always process a whole column of pixels in parallel. As we are using `f32` to store winding numbers, we can conveniently use 128-bit vector types for this. Although tiles always have a fixed size of 4x4 pixels, the current approach is, not easily extendable for 256-bit and 512-bit vector types since we have the dependency on the left pixel, meaning that multiple columns cannot be processed in parallel. Adding support for bigger vector types is possible in principle, but would require changes to the calculation of the winding number to make it completely independent from other pixels.
+
+The fine rasterization stage makes it even easier to add such optimizations, as the calculations for compositing and blending pixels are truly independent and have no dependencies on neighboring pixels. Because of this, it would therefore theoretically be possible to use 512-bit vectors for most calculations. For the f32-pipeline, a whole column of pixels could be processed at the same time since a column consists of 4 pixels and each pixel stores for `f32` values for the red, green, blue, and alpha channel. Since storing `u8`s only need one fourth of the space, the u8-pipeline could therefore even process chunks of 4x4 pixels at the same time.
+
+ However, performing computations with such large vectors has the risk of causing high register pressure on targets that do not support such a large width natively. Therefore, in practice, the current implementation uses 256-bit vector types by default, and switches to 128-bit or 512-bit in certain places if it is appropriate.
 
 == Multi-threading <mult-threading>
 
