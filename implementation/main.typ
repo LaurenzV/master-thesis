@@ -303,6 +303,75 @@ After completing fine rasterization, each wide tile stores a buffer of RGBA valu
 To address these points, there is a final stage called _packing_. As part of this, we iterate over all wide tiles and copy each pixel in their buffer to the appropriate location in the user-supplied `Pixmap`. In case the values are stored as f32, we multiply the values by 255 and then round them to the appropriate `u8` values. Once this done, all pixels are stored in the pixmap as premultiplied RGBA values and the user can process them further, for example by encoding the pixels into a PNG file and storing it to disk.
 
 == SIMD <simd>
+In order to achieve the best performance, implementing SIMD optimizations is indispensable. In many cases, it can be sufficient to rely on autovectorization for that purpose, but in our case this is unsatisfactory for two reasons: Firstly, while the compiler often does a very good job at detecting auto-vectorization opportunities, it does not do so 100% reliably and making the intended vectorizations explicit by using SIMD intrinsics is therefore more desirable. Secondly, since the Rust compiler by default needs to produce portable code, it can often only rely on a very reduced set of SIMD intrinsics. For example, in order to instruct the compiler to make use of AVX2 feature, you need to explicitly enable the `avx2` target feature, as a result of which the compiled code cannot be run on x86 devices that do not support these instructions.
+
+=== Library
+
+For Vello CPU, our two main goals for the SIMD implementation were:
++ The SIMD code should be written in a target-agnostic way. We wanted to write our code *once* using an abstraction over SIMD vector types and then have the ability to generate target-specific SIMD code on-demand.
++ The implementation should support runtime dispatching, so that we can for example leverage AVX2 instructions on targets that support it, while falling back to SSE4 or even scalar instructions on targets that do not.
+
+There already exist Rust libraries that attempt implementing such an abstraction abstraction, like for example pulp @pulp. However, after evaluating available options, we came to the conclusion that it would be most advantageous to build our own abstraction, such that we have full control over the overall architecture and the set of implemented instructions. To this purpose, we built `fearless_simd` @fearless_simd, a SIMD abstraction library that exposes abstract vector types such as `f32x4` or `u8x32` as well as functions for arithmetic operations and will behind the scences call the appropriate SIMD instrinsics. At the time of writing, support is limited to NEON, WASM SIMD, SSE4.2, all of which operate on 128-bit vector types. A fallback level also exists for platforms without SIMD support. Larger vector types (like `u8x32` or `u8x64`) are also supported but will simply be polyfilled using the 128-bit intrinsics.
+
+One of the main features of `fearless_simd` is that it is based on code generation. Writing manual code for all different combinations of artithmetic operators (which often are only distinguished by the different name of the called intrinsic) and vector sizes would be incredibly hard to maintain. Because of that, the core logic of generating the intrinsic calls happens in a separate Rust crate using the `proc-macro2` @proc_macro_2 and `quote` @quote_crate crates, and the `fearless_simd` crate then simply contains the output of the auto-generated code.
+
+At the core of the `fearless_simd` is the `Simd` trait, which defines the methods for all possible combinations of vector types and arithmetic (or boolean) operators. A very small selection of those is displayed in @simd-trait. Note in particular how the actual vector types such as `f32x4` are also generic over `Simd`.
+
+#figure(
+  ```rs
+trait Simd {
+  fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self>;
+  fn add_f32x8(self, a: f32x8<Self>, b: f32x8<Self>) -> f32x8<Self>;
+  fn add_u8x16(self, a: u8x16<Self>, b: u8x16<Self>) -> u8x16<Self>;
+  fn sqrt_f32x4(self, a: f32x4<Self>) -> f32x4<Self>;
+  fn sub_u16x8(self, a: u16x8<Self>, b: u16x8<Self>) -> u16x8<Self>;
+}
+  ```,
+  caption: [A selection of functions defined by the `Simd` trait.],
+  placement: auto
+) <simd-trait>
+
+The different available SIMD levels are then represented as zero-sized types that implement the functions for the given architecture. In order to prevent the user from arbitrarily creating levels on platforms that do not support it, the types contain an empty private field so that they can only be constructed from within the crate, were an instance of the struct will only be returned at runtime if the current system supports the given capabilities.
+
+An example of the implementation of the `Simd` trait can be seen in @simd-trait-impl. For `Fallback`, we simply use normal scalar arithmetic to implement the addition of two floating point numbers, while for `Neon` we make a call to the `vaddq_f32` intrinsic.
+
+#figure(
+  ```rs
+pub struct Fallback {
+    _private: (),
+}
+
+impl Simd for Fallback {
+    #[inline(always)]
+    fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        [
+            f32::add(a[0usize], &b[0usize]),
+            f32::add(a[1usize], &b[1usize]),
+            f32::add(a[2usize], &b[2usize]),
+            f32::add(a[3usize], &b[3usize]),
+        ]
+            .simd_into(self)
+    }
+}
+
+pub struct Neon {
+    _private: (),
+}
+
+impl Simd for Neon {
+    #[inline(always)]
+    fn add_f32x4(self, a: f32x4<Self>, b: f32x4<Self>) -> f32x4<Self> {
+        unsafe { vaddq_f32(a.into(), b.into()).simd_into(self) }
+    }
+}
+  ```,
+  caption: [Example implementations of the SIMD trait for `Fallback` and `Neon`.],
+  placement: auto
+) <simd-trait-impl>
+
+Using these capabilities, we can define the main functions in Vello CPU to be generic over the `Simd` trait which allows us to implement them in a platform-agnostic way while still leveraging SIMD capabilities.
+
+=== Implementation
 
 == Multi-threading <mult-threading>
 
