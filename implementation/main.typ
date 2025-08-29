@@ -4,7 +4,7 @@
 = Implementation <implementation>
 In this section, we will first showcase an example code snippet to demonstrate how Vello CPU's API works. Afterwards, the majority of the section will be dedicated to explaining each part of the rendering pipeline in Vello CPU. Finally we will illustrate how the pipeline was accelerated by employing SIMD and multi-threading.
 
-== API
+== API <api>
 @api_example_Listing provides a small example that demonstrates how to use Vello CPU's Rust API for basic rendering.
 
 #[
@@ -20,7 +20,7 @@ In this section, we will first showcase an example code snippet to demonstrate h
   ) <api_example_Listing>
 ]
 
-In the beginning, the user can specify settings that should be applied while rendering. The `level` property indicates which SIMD level should be used during rendering. By default, Vello CPU will dynamically detect the highest available level on the host system, but the user can in theory override this to for example force using SSE4.2 instructions, even though the system supports AVX2 in theory. The `num_threads` property allows you to enable multi-threaded execution (see @mult-threading) or force single-threaded execution by setting the value to 0. Finally, the `render_mode` property indicates whether to prioritize speed or quality during rendering (see @fine_rasterization).
+In the beginning, the user can specify settings that should be applied while rendering. The `level` property indicates which SIMD level should be used during rendering. By default, Vello CPU will dynamically detect the highest available level on the host system, but the user can in theory override this to for example force using SSE4.2 instructions, even though the system supports AVX2 in theory. The `num_threads` property allows you to enable multi-threaded execution (see @multi-threading) or force single-threaded execution by setting the value to 0. Finally, the `render_mode` property indicates whether to prioritize speed or quality during rendering (see @fine_rasterization).
 
 The user then creates a new `RenderContext` by specifying a width and height as well as the render settings. An important property of the `RenderContext` is that it is _reusable_. This means that if the user renders a certain scene and then wants to render a second scene, they can just _reset_ the context and then reuse it instead of having to initialize a new one. This is important because during the rendering process, _Vello CPU_ will need to make a number of memory allocations, which can have a some impact on runtime. By reusing the same `RenderContext`, Vello CPU can _reuse_ the existing allocations in subsequent rendering operations, leading to better performance. This property is especially useful in the context of GUI rendering, where it is common to render different scenes dozens of times per second over an extended period of time.
 
@@ -389,7 +389,16 @@ The fine rasterization stage makes it even easier to add such optimizations, as 
 
  Finally, the last part that makes use of SIMD optimized is the pack function for the u8 pipeline. in @packing, it was explained that one of the main challenges of packing is that we need to "transpose" the pixels from column-major order in the wide tiles to row-major order in the pixmap. The main bottleneck here is first loading and then storing each pixel one at a time. Fortunately, at least some SIMD instruction sets have dedicated intrinsics that makes this a lot easier. For example, NEON has the `vld4q_u32` instruction which allows loading 16 `u32` values (in this case, the RGBA values of a single pixel are interpreted as a single `u32` value instead of 4 `u8` values) and interleaving them all in one step. By doing so, we can directly store each vector in the corresponding row in the pixmap. Our benchmarks showed that handling these pixels in bulk using SIMD leads to a more than 3x speedup, so this is a very important optimization.
 
-== Multi-threading <mult-threading>
+== Multi-threading <multi-threading>
+One core motivation for exploring the sparse strips  approach was that we believed it to be compatible with multi-threading, something that currently is only supported by one other mainstream renderer, namely Blend2D. @multi-threading-architecture provides a rough overview of the architecture that enables this rendering mode. In general, there are two independent stages that run completely in parallel on different threads (path rendering and rasterization), while coarse rasterization is still exclusively performed on the main thread, therefore forming the only serial bottleneck in the pipeline.
+
+#figure(
+  image("assets/multi_threading_architecture.pdf", width: 90%),
+  caption: [An overview of the architecture for multi-threaded rendering.],
+  placement: auto
+) <multi-threading-architecture>
+
+Everything starts with the creation of the `RenderContext` (see @api), where the user can set the number of threads that should be used for rendering. In case it is set to 0, no multi-threading will be activated and the code path for single-threaded rendering will be used. Otherwise, the `RenderContext` will spawn a thread pool containing `num_threads` threads, meaning that including the main thread there will be `num_threads + 1` active threads.
 
 == Comparison
 #todo[Do we want a section on this?]

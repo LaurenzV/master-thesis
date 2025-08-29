@@ -206,10 +206,6 @@ For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert
 
 #todo([Add section on blending? (probably not worth it)])
 
-== Clipping 
-
-#todo([Add section on clipping? (perhaps worth it if we describe clipping in the main part, but low priority)])
-
 == Anti-aliasing
 
 As was elaborated in @rendering_intro, the main goal of 2D rendering is to convert vector graphics into pixel representation. However, a fundamental problem is that since vector graphics are defined in a continuous space, it is possible that certain parts of the shape only _partially_ cover a pixel, as can be seen for example in @butterfly_outlined. Since a pixel can only emit one specific color, there is no direct way of retaining that information after the conversion process. There are two ways this problem can be dealt with.
