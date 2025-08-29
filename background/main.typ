@@ -52,7 +52,7 @@ The definition of lines is relatively straight-forward and illustrated in @line_
 === Quadratic Bézier curves
 For quadratics Bézier curves, things are a bit different. While we still have the start and end points $P_0$ and $P_1$, we have a third point $P_2$ which is called the _control point_. Given these points, the formula for evaluating the curve is given by $P_0(1 - t)^2 + 2 * (1 - t) t P_2 + P_1 * t^2$ #cite(<mathematics_for_computer_graphics>, supplement: [p. 239]). The evaluation of a quadratic Bézier curve can be nicely visualized by thinking of it as a linear interpolation applied twice, as can be seen in @quads_definition.
 
-Assume we want to evaluate the curve at $t = 0.3$. We first start by finding the point $P_0P_2$ by linearly interpolating the points $P_0$ and $P_2$ with our given $t$. We do the same for the line spanning the points $P_2$ and $P_1$ to end up with the point $P_2P_1$. Then, we simply connect the points $P_0P_2$ #todo[annotate in the plot] and $P_2P_1$, and perform another round of linear interpolation with our value $t$, which will then yield the final point on the curve. Similarly to simple line segments, we perform this evaluation for all $t in [0, 1]$ to end up with the final curve as it is visualized on the right in @quads_definition.
+Assume we want to evaluate the curve at $t = 0.3$. We first start by finding the point $P_0P_2$ by linearly interpolating the points $P_0$ and $P_2$ with our given $t$. We do the same for the line spanning the points $P_2$ and $P_1$ to end up with the point $P_2P_1$. Then, we simply connect the points $P_0P_2$ and $P_2P_1$, and perform another round of linear interpolation with our value $t$, which will then yield the final point on the curve. Similarly to simple line segments, we perform this evaluation for all $t in [0, 1]$ to end up with the final curve as it is visualized on the right in @quads_definition.
 
 #figure(
   image("assets/quads.pdf"),
@@ -96,8 +96,6 @@ We now know how we can define the outline of a shape using lines and curves, but
 In the case of _filling_, we determine all of the areas on the drawing canvas that are _inside_ of the outline we defined (how exactly these are determined will be elaborated in @fill_rules) and paint them using the specified color, as can be seen in @dragon_filled.
 
 _Stroking_ on the other hand uses a different approach. Stroking a shape is analogously equivalent to using a marker with a specific color and width, and using it to trace the outline of the shape. In doing so, all of the outer parts of the shape will be painted in that color. The visual effect of this drawing mode can be observed in @dragon_stroked.
-
-#todo[Explain the different stroke settings]
 
 == Fill rules <fill_rules>
 Another important problem to be aware of is the question of which parts of a shape are actually considered to be on the "inside" and thus should be colored. For simple shapes such as rectangles or circles, it is intuitively obvious which areas are inside of the shape. But when trying to analyze more complex, self-intersecting paths, just relying on intuition is not sufficient anymore. There is a need for a clear definition of "insideness", such that it is always possible to unambiguously determine whether a point on the drawing area is inside of the shape or not.
