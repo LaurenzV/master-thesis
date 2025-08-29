@@ -303,32 +303,32 @@ Finally, sweep gradients are colored by setting a center point as well as a star
 === Images
 As was mentioned in @rendering_intro, it is highly desirable to represent content as vector graphics whenever possible, as it allows for arbitrary scaling without any loss of precision. However, it is clear that this is not always possible, because many objects simply cannot be represented as vector graphics, like for example images taken with a camera.
 
-The fundamental difficulty of rendering images in 2D graphics is that the input image might not have the same resolution as the rendered image. For instance, if an input image has a resolution of 1000x800 pixels but our output display has a resolution of 1350x1080, we need to apply a scaling factor of 1.35 to the image for it to render correctly. To do this, we need to _resample_ the image to determine what color each pixel on the display should be to accurately reproduce the original image at the higher resolution. In order to achieve this, three methods are commonly used: _Nearest-neighbor interpolation_, _bilinear interpolation_ and _bicubic interpolation_ #cite(<digital_image_processing>, supplement: [p. 87-89]). @patterns_butterfly contrasts the different scaling methods using the 10x10 pixels input image in @input_image scaled by a factor of 50.
+The fundamental difficulty of rendering images in 2D graphics is that the input image might not have the same resolution as the rendered image. For instance, if an input image has a resolution of 1000x800 pixels but our output display has a resolution of 1350x1080, we need to apply a scaling factor of 1.35 to the image for it to render correctly. To do this, we need to _resample_ the image to determine what color each pixel on the display should be to accurately reproduce the original image at the higher resolution. In order to achieve this, three methods are commonly used: _Nearest-neighbor interpolation_, _bilinear interpolation_ and _bicubic interpolation_ #cite(<digital_image_processing>, supplement: [p. 87-89]). @patterns_rect contrasts the different scaling methods using the 10x10 pixels input image in @input_image scaled by a factor of 50.
 
 #subpar.grid(
   [], figure(image("assets/texture_nearest_neighbor.png", width: 30%), caption: [
     The input image.
   ]),
   <input_image>, [],
-figure(image("assets/butterfly_nearest_neighbor.svg"), caption: [
+figure(image("assets/rect_nearest_neighbor.svg"), caption: [
     Nearest-neighbor interpolation.
   ]),
-  <butterfly_nearest_neighbor>,
-figure(image("assets/butterfly_bilinear.svg"), caption: [
+  <rect_nearest_neighbor>,
+figure(image("assets/rect_bilinear.svg"), caption: [
     Bilinear interpolation. #linebreak() #linebreak()
   ]),
-  <butterfly_bilinear>,
+  <rect_bilinear>,
 
-  figure(image("assets/butterfly_bicubic.svg"), caption: [
+  figure(image("assets/rect_bicubic.svg"), caption: [
     Bicubic interpolation. #linebreak() #linebreak()
   ]),
-  <butterfly_bicubic>,
+  <rect_bicubic>,
   columns: (1fr, 1fr, 1fr),
-  caption: [The shape of a butterfly filled using a 50x scaled image using nearest-neighbor, bilinear and bicubic interpolation.],
-  label: <patterns_butterfly>,
+  caption: [The shape of a rectangle filled using a 50x scaled image using nearest-neighbor, bilinear and bicubic interpolation.],
+  label: <patterns_rect>,
   placement: auto
 ) 
 
-In the case of nearest-neighbor interpolation, the algorithm is very straight-forward: It simply calculates the position of the new pixel in the old image by multiplying it with the inverse scale, and then samples the color value of the closest pixel. The result in @butterfly_nearest_neighbor shows that by using this interpolation method, the "block-like" structure of the original input image is preserved. In certain cases, this can be a desirable property (imagine for example rendering a heat map as it can be created with libraries like `matplotlib`, where you want to ensure that the individual cells retain their color), but in many cases, this interpolation method can cause artifacts, and is therefore not often used #cite(<digital_image_processing>, supplement: [p. 88]). The main advantage is that it is computationally very cheap.
+In the case of nearest-neighbor interpolation, the algorithm is very straight-forward: It simply calculates the position of the new pixel in the old image by multiplying it with the inverse scale, and then samples the color value of the closest pixel. The result in @rect_nearest_neighbor shows that by using this interpolation method, the "block-like" structure of the original input image is preserved. In certain cases, this can be a desirable property (imagine for example rendering a heat map as it can be created with libraries like `matplotlib`, where you want to ensure that the individual cells retain their color), but in many cases, this interpolation method can cause artifacts, and is therefore not often used #cite(<digital_image_processing>, supplement: [p. 88]). The main advantage is that it is computationally very cheap.
 
-When performing bilinear interpolation, we do not only consider a single nearest neighbor, but actually the four nearest neighbors. We then assign a weight to each neighbor based on the exact location we are sampling and interpolate across those 4 pixels. The same applies to bicubic interpolation, with the only difference that we consider 16 neighbors instead #cite(<digital_image_processing>, supplement: [p. 88]). The results for bilinear interpolation can be observed in @butterfly_bilinear, where the boundaries appear much smoother due to the interpolation. At first glance, the bicubic interpolation in @butterfly_bicubic has a very similar effect to the bilinear interpolation in @butterfly_bilinear, but looking at it closer, it does become apparent that the bilinear version has some very subtle "star-like" artifacts in some places that are not present in the bicubic version. However, the cost for the slightly better quality is a much higher computational intensity per pixel.
+When performing bilinear interpolation, we do not only consider a single nearest neighbor, but actually the four nearest neighbors. We then assign a weight to each neighbor based on the exact location we are sampling and interpolate across those 4 pixels. The same applies to bicubic interpolation, with the only difference that we consider 16 neighbors instead #cite(<digital_image_processing>, supplement: [p. 88]). The results for bilinear interpolation can be observed in @rect_bilinear, where the boundaries appear much smoother due to the interpolation. At first glance, the bicubic interpolation in @rect_bicubic has a very similar effect to the bilinear interpolation in @rect_bilinear, but looking at it closer, it does become apparent that the bilinear version has some very subtle "star-like" artifacts in some places that are not present in the bicubic version. However, the cost for the slightly better quality is a much higher computational intensity per pixel.

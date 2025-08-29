@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="256" height="256" fill="none" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+  <pattern id="patt1" patternUnits="userSpaceOnUse" x="0" y="0" width="256" height="256">
+        <image width="256" height="256" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0CAMAAAD8CC+4AAAAYFBMVEX//wD/3wC//wDAwMD/vwDwwABA/4D/oAD/gID/kAD/gACQkJCAgP/ggAAAv///YADAgACAgIBAgP+ggADQYAD/QAAAgP/AQADfIAD/AACAQACgIAC/AACAAABgAABAAAD4Hh3sAAADV0lEQVR42u3UQQrCQBREwThGFBF3Lrz/GTVgMPEI+jfNBKuu8Ohu94Bb2Tlg7NIQ0Aa6IjqiIzqiIzqiI7roiI7oiI7oiI7oiI7oiI7oiI7oiI7oiI7ooiM6oiM6oiM6oiM6oiM6oiM6oiM6oiM6oiO66IiO6IiO6IiO6IiO6IiO6IiO6IiO6IiO6KIjOqIjOqIjOqIjOqIjOqIjOqIjOqIjOqKLjuiIjuiIjuiIjuiIjuiIjuiIjuiIjuiILjqiIzqiIzrb09aAoewQsO+SpSM6oiM6oiM6oouO6IiO6IiO6IiO6IiO6IiO6IiO6IiO6IguOqIjOqIjOqIjOqIjOqIjOqIjOqIjOqIjOqKLjuiIjuiIjuiITkfaGHDq0qtsDrgGWLp7R3RER3RER3RER3RER3RER3RER3RER3REFx3RER3RER3RER3RER3RER3RER3RER3REV10REd0REd0REd0REd0REd0REd0RGfb0Z8BoiM6oiM6oiM6oiM6oiM6oiM6oiM6oiM6oouO6IiO6IiO6IiO6IiO6IiO6IiO6IiO6IguOqIjOqIjOqIjOqIjOqIjOqIjOqIjOj1EX8qOAWPZEHAKsHRLR3RER3RER3RER3RER3RER3RER3RER3REFx3RER3RER3RER3RER3RER3RER3RER3REV10REd0REd0REd0REd0REd0REd0ROdHrW4pW8seAWOXngGW7t4RHdERHdERHdERHdERHdERHdERHdERHdFFR3RER3RER3RER3RER3RER3RER3RER3REFx3RER3RER3RER3RER3RER3RER3R2Xb0c5dER3RER3RER3RER3RER3RER3RER3TRER3RER3RER3RER3RER3RER3RER3RER3RRUd0REd0REd0REd0REd0REd0REd0REd0RBedP9N2ZVPAO+BRdgmYAizdvSM6oiM6oiM6oiM6oiM6oiM6oiM6oiM6oouO6IiO6IiO6IiO6IiO6IiO6IiO6IiO6IguOqIjOqIjOqIjOqIjOqIjOqIjOqKz7ehzgOiIjuiIjuiIjuiIjuiIjuiIjuiIjuiIjuiiIzqiIzqiIzqiIzqiIzqiIzqiIzqiIzqii47oiI7oiI7oiI7oiI7oiI7oiI7oiM4XHzVJnOc0P0YNAAAAAElFTkSuQmCC" />
+    </pattern>
+    <radialGradient id="grad" cx="125" cy="125" r="125" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="blue" />
+      <stop offset="40%" stop-color="red" />
+      <stop offset="70%" stop-color="yellow" />
+      <stop offset="100%" stop-color="green" />
+    </radialGradient>
+  </defs>
+<rect fill="url(#patt1)" x="0" y="0" width="256" height="256" />
+  <rect x="0" y="0" width="256" height="256" stroke="black"/>
+</svg>
