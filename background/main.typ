@@ -272,33 +272,33 @@ Conceptually, gradients represent smooth transitions between two or multiple col
   caption: [Visualization of a gradient line with the stops `(blue, 0.0)`, `(red, 0.4)`, `(yellow, 0.7)` and `(green, 1.0)`.]
 ) <gradient_line>
 
-Once we have a mapping from $t$ values to a color, we simply need to define another mapping from the $(x, y)$ position of a pixel to a $t$ value, so that we know how to color that pixel. There are three commonly used type of gradients that define this mapping in different ways: _Linear gradients_, _radial gradients_ and _sweep gradients_. Examples of applying those paint types to the shape of a butterfly can be seen in @gradients_butterfly.
+Once we have a mapping from $t$ values to a color, we simply need to define another mapping from the $(x, y)$ position of a pixel to a $t$ value, so that we know how to color that pixel. There are three commonly used type of gradients that define this mapping in different ways: _Linear gradients_, _radial gradients_ and _sweep gradients_. Examples of applying those paint types to the shape of a butterfly can be seen in @gradients_rect.
 
 #subpar.grid(
-  figure(image("assets/butterfly_linear.svg"), caption: [
+  figure(image("assets/rect_linear.svg"), caption: [
     Linear gradient.
   ]),
-  <butterfly_linear>,
+  <rect_linear>,
 
-  figure(image("assets/butterfly_radial.svg"), caption: [
+  figure(image("assets/rect_radial.svg"), caption: [
     Radial gradient.
   ]),
-  <butterfly_radial>,
+  <rect_radial>,
 
-  figure(image("assets/butterfly_sweep.svg"), caption: [
+  figure(image("assets/rect_sweep.svg"), caption: [
     Sweep gradient.
   ]),
-  <butterfly_sweep>,
+  <rect_sweep>,
   columns: (1fr, 1fr, 1fr),
-  caption: [The shape of a butterfly filled using a linear, radial and sweep gradient.],
-  label: <gradients_butterfly>,
+  caption: [The shape of a rectangle filled using a linear, radial and sweep gradient.],
+  label: <gradients_rect>,
 ) 
 
-In the case of a linear gradient, we define a start and end point along which the gradient should interpolate. In the case of @butterfly_linear, the start point is in the top-left corner and the end point in the bottom-right corner. The visual effect will be a linear variation of the gradient line in a diagonal direction.
+In the case of a linear gradient, we define a start and end point along which the gradient should interpolate. In the case of @rect_linear, the start point is in the top-left corner and the end point in the bottom-right corner. The visual effect will be a linear variation of the gradient line in a diagonal direction.
 
-For radial gradients, we define the position and radius of a start circle as well as an end circle. In @butterfly_radial, the start and end circles are both positioned in the center, while the start radius is set to 0 and the end radius to the maximum. The visual result of this gradient is a progression of the interpolated colors in a circular fashion, as if the inner circle "expanded" to the outer circle while varying the color.
+For radial gradients, we define the position and radius of a start circle as well as an end circle. In @rect_radial, the start and end circles are both positioned in the center, while the start radius is set to 0 and the end radius to the maximum. The visual result of this gradient is a progression of the interpolated colors in a circular fashion, as if the inner circle "expanded" to the outer circle while varying the color.
 
-Finally, sweep gradients are colored by setting a center point as well as a start and end angle. In @butterfly_sweep, the center point has been set in the middle, and the radii are 0#sym.degree and 360#sym.degree respectively. In the end, the colors of the gradient line will vary as the angle of the position of the pixel from the center increases.
+Finally, sweep gradients are colored by setting a center point as well as a start and end angle. In @rect_sweep, the center point has been set in the middle, and the radii are 0#sym.degree and 360#sym.degree respectively. In the end, the colors of the gradient line will vary as the angle of the position of the pixel from the center increases.
 
 === Images
 As was mentioned in @rendering_intro, it is highly desirable to represent content as vector graphics whenever possible, as it allows for arbitrary scaling without any loss of precision. However, it is clear that this is not always possible, because many objects simply cannot be represented as vector graphics, like for example images taken with a camera.
