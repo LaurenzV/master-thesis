@@ -200,7 +200,19 @@ However, as will be demonstrated in @compositing, an issue is that many of the c
 For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert it into premultiplied representation we simply need to multiply the RGB channels with the alpha value, which results in the tuple $(0.0 * 0.5, 1.0 * 0.5, 0.0 * 0.5, 0.5) = (0.0, 0.5, 0.0, 0.5)$. Doing calculations using premultiplied alpha whenever possible is incredible important to ensure high performance, as it can drastically reduce the number of computations that need to be done per pixel.
 
 == Compositing <compositing>
-#todo([Figure out how to summarize this briefly.])
+In @opacities-fig, we have demonstrated what happens when you draw one shape on top of another one. In case the shape is fully opaque, it will completely replace the colors any of the previously existing pixels in the overlapping areas, while if the shape has transparency then some parts of the background will shine through. 
+
+While this is the most commonly expected result, there actually exists a generalization of how a _source layer_ (containing the shape you are about to draw) can be combined with a _background layer_ (containing everything that has been drawn so far). The foundational algebra for this is introduced in #cite(form: "prose", <compositing-digital-images>). To put it briefly, the paper introduces a new algebraic model that can be used to combine two layers in different ways. The visual effect of these different operators can be observed in @composition-mode-fig.
+
+#figure(
+  image("assets/compose.pdf", width: 80%),
+  caption: [The effect of compositing two layers with different composition modes. The red rectangle is part of the background layer, the green rectangle is part of the source layer.],
+  placement: auto
+) <composition-mode-fig>
+
+The _SrcOver_ composition mode is _by far_ the most commonly used one and intuitively equivalent to placing the new shape _on top_ of the existing one, as was done in @opacities-fig. This is in contrast to the _DestOver_ composition mode, where the new shape is instead drawn _below_ the existing background. Another interesting combination is for example the _Xor_ mode, where only the non-overlapping parts of the source and background are visible and all other parts are cleared. By combining the algebraic building blocks introduced in that paper in different ways, nine other composition modes can be derived, though some arguably are less useful in practice and simply a result of exhaustively enumerating all possibilities.
+
+Despite their age, the Porter Duff compositing operators form an important part of the CSS and HTML canvas specification @w3c2015compositing and are therefore highly relevant and implemented by most 2D renderers.
 
 == Blending 
 

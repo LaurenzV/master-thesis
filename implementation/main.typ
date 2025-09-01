@@ -259,7 +259,8 @@ struct CmdFill {
     x: u16,
     width: u16,
     paint: Paint,
-    blend_mode: Option<BlendMode>
+    blend_mode: BlendMode,
+    compose: Compose
 }
     ```,
     ```rs
@@ -268,7 +269,8 @@ struct CmdAlphaFill {
     width: u16,
     alpha_idx: usize,
     paint: Paint,
-    blend_mode: Option<BlendMode>
+    blend_mode: BlendMode
+    compose: Compose
 }
     ```
   ),
