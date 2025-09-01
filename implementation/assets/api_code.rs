@@ -18,6 +18,9 @@ ctx.fill_path(&Rect::new(50.0, 50.0, 85.0, 85.0).to_path(0.1));
 ctx.set_paint(GREEN);
 ctx.stroke_path(&Circle::new((50.0, 50.0), 30.0).to_path(0.1));
 
+// Flush all existing operations (only necessary for multi-threaded rendering).
+ctx.flush();
+
 let mut pixmap = Pixmap::new(100, 100);
 ctx.render_to_pixmap(&mut pixmap);
 
