@@ -202,21 +202,30 @@ For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert
 == Compositing <compositing>
 In @opacities-fig, we have demonstrated what happens when you draw one shape on top of another one. In case the shape is fully opaque, it will completely replace the colors any of the previously existing pixels in the overlapping areas, while if the shape has transparency then some parts of the background will shine through. 
 
-While this is the most commonly expected result, there actually exists a generalization of how a _source layer_ (containing the shape you are about to draw) can be combined with a _background layer_ (containing everything that has been drawn so far). The foundational algebra for this is introduced in #cite(form: "prose", <compositing-digital-images>). To put it briefly, the paper introduces a new algebraic model that can be used to combine two layers in different ways. The visual effect of these different operators can be observed in @composition-mode-fig.
+While this is the most commonly expected result, there actually exists a generalization of how a _source layer_ (containing the shape you are about to draw) can be combined with a _destination/background layer_ (containing everything that has been drawn so far). The foundational algebra for this is introduced in #cite(form: "prose", <compositing-digital-images>). To put it briefly, the paper introduces a new algebraic model that can be used to combine two layers in different ways. The visual effect of these different operators can be observed in @composition-mode-fig.
 
 #figure(
   image("assets/compose.pdf", width: 80%),
-  caption: [The effect of compositing two layers with different composition modes. The red rectangle is part of the background layer, the green rectangle is part of the source layer.],
+  caption: [The effect of compositing two layers with different composition modes.],
   placement: auto
 ) <composition-mode-fig>
 
-The _SrcOver_ (source over) composition operator is *by far* the most commonly used one and intuitively equivalent to placing the new shape _on top_ of the existing one, as was done in @opacities-fig. This is in contrast to the _DestOver_ (dest over) composition mode, where the new shape is instead drawn _below_ the existing background. Another interesting combination is for example the _Xor_ mode, where only the non-overlapping parts of the source and background are visible and all other parts are cleared. By combining the algebraic building blocks introduced in that paper in different ways, nine other composition modes can be derived, though some arguably are less useful in practice and simply a result of exhaustively enumerating all possibilities.
+The _SrcOver_ (source over) composition operator is *by far* the most commonly used one and intuitively equivalent to placing the new shape _on top_ of the existing one, as was done in @opacities-fig. This is in contrast to the _DestOver_ (destination over) composition mode, where the new shape is instead drawn _below_ the existing background. Another interesting combination is for example the _Xor_ mode, where only the non-overlapping parts of the source and background are visible and all other parts are cleared. By combining the algebraic building blocks introduced in that paper in different ways, nine other composition modes can be derived, though some arguably are less useful in practice and simply a result of exhaustively enumerating all possibilities.
 
 Despite their age, the Porter Duff compositing operators form an important part of the CSS and HTML canvas specification @w3c2015compositing and are therefore highly relevant and implemented by most 2D renderers.
 
 == Blending 
+Blending is closely related to compositing, in the sense that it allows changing the behavior of how a source and destination layer are merged. However, while compositing is more about defining the visible areas, blending is about how the colors in overlapping areas are mixed together. @blend-mode-fig illustrates this behavior. By far the most common blend mode is _Normal_, where no additional mixing of colors happens and it therefore corresponds to a no-op. In contrast, other blend modes such as _Color Dodge_ or _Difference_ result in the image taking on a noticeably different "tone" in the overlapping areas. The exact semantics of each blend mode are defined by mathematical formulae that describe how the colors of the source and destination should be mixed together @w3c2015compositing.
 
-#todo([Add section on blending? (probably not worth it)])
+#figure(
+  image("assets/blend.pdf", width: 80%),
+  caption: [The effect of blending two layers with different blend modes.],
+  placement: auto
+) <blend-mode-fig>
+
+There are two additional points worth highlighting regarding blending and compositing. 
+- They are not exclusive concepts but _complementary_. Whenever we want to draw a new shape and integrate it into everything else we have drawn so far, we _first_ perform blending for each pixel to determine a (possibly) new source color and _then_ perform compositing to determine how the result is integrated into the existing drawings.
+- While certain blend modes and composition operators are occasionally used to achieve specific visual effects, especially in web graphics, by far the most common operation is to use the _Normal_ blend mode and source-over compositing, which is a relatively straight-forward operation and has the visual effect of placing the new shape _on top_ of the existing ones.
 
 == Anti-aliasing
 
