@@ -206,7 +206,7 @@ While this is the most commonly expected result, there actually exists a general
 
 #figure(
   image("assets/compose.pdf", width: 80%),
-  caption: [The effect of compositing two layers with different composition modes.],
+  caption: [The effect of compositing two layers with different composition operators.],
   placement: auto
 ) <composition-mode-fig>
 
@@ -225,7 +225,7 @@ Blending is closely related to compositing, in the sense that it allows changing
 
 There are two additional points worth highlighting regarding blending and compositing. 
 - They are not exclusive concepts but _complementary_. Whenever we want to draw a new shape and integrate it into everything else we have drawn so far, we _first_ perform blending for each pixel to determine a (possibly) new source color and _then_ perform compositing to determine how the result is integrated into the existing drawings.
-- While certain blend modes and composition operators are occasionally used to achieve specific visual effects, especially in web graphics, by far the most common operation is to use the _Normal_ blend mode and source-over compositing, which is a relatively straight-forward operation and has the visual effect of placing the new shape _on top_ of the existing ones.
+- While certain blend modes and composition operators are occasionally used to achieve specific visual effects, especially in web graphics, by far the most common operation is to use the _Normal_ blend mode and source-over compositing, which is a relatively straight-forward operation and has the visual effect of placing the new shape _on top_ of the existing ones. The combination of these two modes is also referred to as _simple alpha compositing_ @w3c2015compositing.
 
 == Anti-aliasing
 
