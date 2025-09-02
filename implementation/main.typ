@@ -292,6 +292,7 @@ For strips, we more or less just need to copy the `x` and `alpha_idx` properties
 The whole procedure is performed for all wide tile rows, until all commands have been generated. Once this is done, the first phase of rendering is completed and control is handed back to the user. Either, the user decides to render additional paths, in which case the whole cycle of path rendering is repeated and more drawing commands will be pushed to the wide tiles, or the user decides to finalize the process by kicking off the rasterization process via a call to `render_to_pixmap`.
 
 == Fine rasterization <fine_rasterization>
+Once
 #todo[Complete this section]
 
 == Packing <packing>
