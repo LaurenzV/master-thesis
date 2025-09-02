@@ -292,7 +292,22 @@ For strips, we more or less just need to copy the `x` and `alpha_idx` properties
 The whole procedure is performed for all wide tile rows, until all commands have been generated. Once this is done, the first phase of rendering is completed and control is handed back to the user. Either, the user decides to render additional paths, in which case the whole cycle of path rendering is repeated and more drawing commands will be pushed to the wide tiles, or the user decides to finalize the process by kicking off the rasterization process via a call to `render_to_pixmap`.
 
 == Fine rasterization <fine_rasterization>
-Once
+Once all fill commands have been generated and assigned to their wide tile, the actual rasterization process is kick-started, which serves the purpose of calculating the final RGBA value for each pixel.
+
+=== `u8` vs. `f32`
+As will be shown shortly, the vast majority of the fine rasterization pipeline consists of performing additions and multiplications between color values. We can choose to run the calculations using either 32-bit floating point numbers that are normalized between 0.0 and 1.0, or 8-bit unsigned integers ranging from 0 to 255. 
+
+For example, assume that we have three colors given by their RGBA values: $ & c_1 = (255, 0, 0, 255) \ & c_2 = (0, 128, 0, 255) $ We now want to determine the color that results from linearly interpolating between the two with a $t$ of value $0.3$ using the formula $t * c_1 + (1.0 - t) * c_2$.
+
+For `f32`, we first normalize the numbers by dividing by 255, resulting in (1.0, 0.0, 0.0, 1.0) and (0.0, 0.5, 0.0, 1.0). Next, we simply do the interpolation: $0.3 * (1.0, 0.0, 0.0, 1.0) + 0.7 * (0.0, 0.5, 0.0, 1.0) = (0.3, 0.35, 0.0, 1.0)$. If we want, we can then scale and then round the result back to `u8`, resulting in the value (77, 89, 0, 255).
+
+For `u8`, we instead scale up the fraction and change the formula to $t * c_1 + (255 - t) * c_2$ to perform the calculations using just integers, in the end dividing the result by 255 to normalize the result back to the range of a `u8`: $(77 * (255, 0, 0, 255) + 178 * (0, 128, 0, 255)) / 255 = ((19635, 0, 0, 19635) + (0, 22784, 0, 45390)) / 255 = (77, 89, 0, 255)$. Do note that for the intermediate results, we need to store them using `u16`s to prevent overflows.
+
+As can be seen, at least in this particular case both calculations lead to the same result. However, there is a delicate trade-off between the two methods that becomes especially relevant as the number of calculations for the same pixel increases (which will happen if multiple shapes overlap the same pixel). The integer-based pipeline is usually faster as it allows processing more pixels at the same time due to only requiring 8/16 bits instead of 32 bits per channel. However, the clear disadvantage is that in contrast to `f32`, we are losing much more precision due to quantization. These rounding errors can become bigger as the number of pixel-level calculation increases.
+
+As these rounding errors are usually not noticeable to the naked eye, using the `u8`-pipeline is usually preferable, but there are use cases where the higher precision can play an important role. Therefore, Vello CPU gives the user the freedom to decide themselves which pipeline to use. For simplicity, the remainder of this subsection will assume that the `f32`-pipeline is used.
+
+
 #todo[Complete this section]
 
 == Packing <packing>
