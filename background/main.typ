@@ -192,7 +192,7 @@ The answer depends on the _opacity_ (also known as alpha) of the color. In @colo
 
 The effect of varying the opacity can be observed @opacities-fig, where a green rectangle with varying opacities is drawn on top of a fully opaque red rectangle. In case the opacity is 0%, the green rectangle cannot be seen at all. In the case of 100%, the overlapping areas are painted completely in green. In all other cases, the background still shines through to a certain degree, depending on how high the transparency is. As a result, the overlapping area of the two rectangles takes on a color that is somewhere "in-between" red and green.
 
-=== Premultiplied alpha
+=== Premultiplied alpha <premul-alpha>
 Another important concept related to representation of color is the distinction between _premultiplied_ vs. _non-premultiplied_ alpha. We now know that we can store the RGBA colors using four numbers, each number representing one channel. A fully green color with 50% opacity can be compactly represented using the tuple $(0.0, 1.0, 0.0, 0.5)$. Storing the alpha explicitly as a separate channel is referred to as _non-premultiplied alpha_ representation.
 
 However, as will be demonstrated in @compositing, an issue is that many of the compositing formulas require multiplying the RGB channels with the alpha value. Redoing this computation every time is expensive, giving rise to the idea of performing this multiplication _ahead of time_ and storing the color implicitly with the alpha channel multiplied. This is referred to as _premultiplied alpha_ representation @image_compositing_fundamentals.
@@ -214,7 +214,7 @@ The _SrcOver_ (source over) composition operator is *by far* the most commonly u
 
 Despite their age, the Porter Duff compositing operators form an important part of the CSS and HTML canvas specification @w3c2015compositing and are therefore highly relevant and implemented by most 2D renderers.
 
-== Blending 
+== Blending <blending-sect>
 Blending is closely related to compositing, in the sense that it allows changing the behavior of how a source and destination layer are merged. However, while compositing is more about defining the visible areas, blending is about how the colors in overlapping areas are mixed together. @blend-mode-fig illustrates this behavior. By far the most common blend mode is _Normal_, where no additional mixing of colors happens and it therefore corresponds to a no-op. In contrast, other blend modes such as _Color Dodge_ or _Difference_ result in the image taking on a noticeably different "tone" in the overlapping areas. The exact semantics of each blend mode are defined by mathematical formulae that describe how the colors of the source and destination should be mixed together @w3c2015compositing.
 
 #figure(
