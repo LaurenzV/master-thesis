@@ -95,6 +95,8 @@
   )
   
   #set heading(numbering: none)
+  #show heading.where(level: 4): set heading(numbering: none)
+  #show heading.where(level: 5): set heading(numbering: none)
   #show heading: it => {
     set text(font: "New Computer Modern Sans")
 

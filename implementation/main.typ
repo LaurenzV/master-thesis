@@ -292,12 +292,52 @@ For strips, we more or less just need to copy the `x` and `alpha_idx` properties
 The whole procedure is performed for all wide tile rows, until all commands have been generated. Once this is done, the first phase of rendering is completed and control is handed back to the user. Either, the user decides to render additional paths, in which case the whole cycle of path rendering is repeated and more drawing commands will be pushed to the wide tiles, or the user decides to finalize the process by kicking off the rasterization process via a call to `render_to_pixmap`.
 
 == Fine rasterization <fine_rasterization>
-Given a set of wide tiles that contain different draw commands, the actual rasterization process is kick-started, which serves the purpose of calculating the actual RGBA values of each pixel. In order to do so, we iterate over each wide tile and process it in isolation. In the beginning, an empty scratch buffer with the dimension 256x4 pixels (i.e. the same area covered by the wide tile) is created and each pixel is set to the RGBA value (0.0, 0.0, 0.0, 0.0), i.e. a fully transparent color. We then iterate over each command and process them sequentially.
+Given a set of wide tiles that contain draw commands, the actual rasterization process is kick-started. As part of this stage, we calculate the actual RGBA values of each pixel by iterating over each wide tile and process them in isolation. Every time we go to a new wide tile, an empty scratch buffer with the dimension 256x4 pixels (i.e. the same area dimensions of a wide tile) is created and each pixel is set to the RGBA value (0.0, 0.0, 0.0, 0.0), so a fully transparent color. Now, we start to sequentially process each command in the tile.
 
-Assume that we are currently processing the first command in the first wide tile which has an `x` value of 5 and a width value of `10`. Assuming zero-indexed coordinates, this tells us that all pixels whose x position is between 5 and 14 and whose y position is between 0 and 3 (i.e. the height of the wide tile)
+We first need to determine the range of pixels that we want to fill, which is trivial because each command stores that information. For example, if we are processing the third row of wide tiles and encounter a `Fill` command with `x` set to 24 and `width` set to 24, we can infer that all pixels that fall within the rectangle spanned by the points (24, 12) to (48, 16) should be painted with the paint stored in the command. The steps that are outlined below then have to be done for each pixel in the area.
 
-=== Computing color values
+=== Computing pixel color
+The first step is to calculate the _raw_ color value of the pixel, which is determined by the paint that we are using. In the case of a solid color, this is trivial as the pixel just assumes that given color. However, the story is different for gradient and image paints, where the color value depends on the exact location of the pixel.
 
+==== Image paints
+In @patterns_rect, we illustrated the concept of image paints based on a 10x10 input texture which is scaled up by the factor of 50 to fill a rectangle with the dimensions 500x500. Assume for example that we are currently processing the pixel at the location (385, 110). If we want to determine the color of that pixel using the nearest-neighbor method, we simply need to _reverse_ the scaling process and then sample the color value of the closest pixel value in the input texture. Since our scaling factor is 50, we simply divide by that factor, which results in the position $(385 / 50, 110 / 50) =$ (7.7, 2.2). As can be seen in @sampling-nn-fig, the nearest neighbor of this fractional location is the pixel at the location (7, 2) which is orange. Therefore, the pixel at the location (385, 110) in the new image will also assume the color orange.
+
+#subpar.grid(
+  figure(image("assets/sample_nn.svg", width: 100%), caption: [
+    Nearest neighbor.
+  ]), <sampling-nn-fig>,
+  figure(image("assets/sample_bilinear.svg", width: 100%), caption: [
+    Bilinear filtering.
+  ]), <sampling-bil-fig>,
+  figure(image("assets/sample_bicubic.svg", width: 100%), caption: [
+    Bicubic filtering.
+  ]), <sampling-bic-fig>,
+  columns: (1fr, 1fr, 1fr),
+  caption: [The different image sample strategies. The black dot represents the original location, the red dots the sampled locations],
+  label: <sampling-fig>,
+  placement: auto,
+)
+
+The story is a bit different when using bilinear filtering instead. In this case, we instead sample the color values of the four _surrounding_ locations (like in @sampling-bil-fig) and perform a linear interpolation of those samples by weighting them based on our exact fractional location within the pixel. The resulting color will then neither be a a clean orange or yellow, but instead some intermediate color. Doing this for all pixels achieves the effect of smoothing the edges between pixels with varying colors, as was previously shown in @patterns_rect. Bicubic filtering operates on a similar basis, but instead samples the surrounding 16 pixels and then uses a cubic filter for weighting the contributions of each sample based on proximity. The result will be an even smoother blending between pixel edges, at the cost of a higher computational cost.
+
+==== Gradient paints
+As was mentioned in @background-gradients, gradients allow us to represent smooth transitions between different colors along a certain trajectory. When doing fine rasterization, we need to calculate the exact position along the gradient line so that the color that the pixel should be painted with can be determined. How exactly this is achieved depends on the gradient type.
+
+#figure(
+  image("assets/gradient_t_vals.pdf", width: 80%),
+  caption: [Determining the $t$-value of a pixel for each gradient type.],
+  placement: auto
+) <gradient-t-vals>
+
+Linear gradients are defined by a start and end point that define the line used as the basis for the color gradient, as was previously shown in @rect_linear. In order to calculate the parametric `t` value for any arbitrary pixel position, we just need to calculate the intersection of the _perpendicular_ line that passes through the pixel position. If the intersection point lies exactly at the start point, the value of $t$ will be zero. If it instead lies at the end point, the value will be one. Otherwise, for any position in-between the value will be some fractional value between zero and one, as seen in @gradient-t-vals.
+
+Radial gradients instead are defined by a start and end circle which each have their respective center points and an associated radius. In @gradient-t-vals, both circles are centered in the middle and the radius of the start circle is zero. The visual result is a circle that keeps expanding its radius while constantly changing the color depending on the $t$ value. In order to calculate the $t$ value at any arbitrary pixel position, we simply need to calculate the distance of the pixel to the gradient center and then divide it by the radius of the outer circle, giving us the $t$ value in the range 0.0 to 1.0. Note that the above calculation assumes that the start and end circles are concentric and the start radius is 0, which represents the simplest kind of gradient there is. There are however many other possible variations, in which case the above method is not sufficient anymore. For example, the start radius could be larger than 0 or the center points of the circles could be in different positions. To account for these, we decided to adopt the same approach as in Skia, where the radial gradient is assigned to a specific category based on its properties and an appropriate formula is then used to compute the value of $t$ for a specific location. However, since the details of this approach are relatively intricate, we will not elaborate on them and leave it at this high-level description.
+
+For sweep gradients, we only need to determine the angle of the pixel in relation to the center point, which can be easily done using the `atan2` function. In our case, similarly to Skia we do not actually use the `atan2` function but instead compute the angle with the help of a polynomial approximation of the `atan2` function, as this is makes it easier to compute the angle for multiple pixels at a time using SIMD (see @simd).
+
+After having determined the $t$ value we need to calculate the corresponding color value. This is achieved by looking at the two surrounding color stops and doing a linear interpolation based on the position between the two stops. For example, assume that we have a blue color stop at the position $t = 0.15$ and a red color stop at the position $t = 0.40$. We now want to determine the color that should be used for the value of $t = 0.33$. We first scale the $t$ value to the range [0.0, 1.0] so that 0.0 stands stands for fully blue and 1.0 for fully red: $(0.33 - 0.15) / (0.40 - 0.15) = 0.72$. Doing a simple linear interpolation will yield the final color: $0.28 * (0.0, 1.0, 0.0, 1.0) + 0.72 * (1.0, 0.0, 0.0, 1.0) = (0.72, 0.28, 0.0, 1.0)$. A feasible approach would be to run this calculation for every pixel after we have determined the $t$ value, but doing so would be very costly. 
+
+Instead, what we do is that we _precompute_ a LUT (look-up table) that contains precomputed interpolated colors for specific $t$ values between 0.0 and 1.0. Depending of the number of color stops, the number of entries is either 256, 512 or 1024. After calculating the $t$ value of a pixel, we then look up the color value of the entry that is the closest to our $t$ value and use that. By doing so, the necessary work for each pixel is reduced from computing the linear interpolation to a simple memory access, which is significantly faster. The downside is that the color values will not be a 100% accurate, but thanks to the high resolution of the LUT the differences will be so small that they are not at all noticeable. Another downside is that we need to do a lot of computations ahead of time even though not all of them might be needed in the end, but especially for larger-sized geometries this initial overhead is completely eclipsed by the performance improvement that arises from reducing the per-pixel workload.
 
 === `u8`/`u16` vs. `f32` <u8-vs-f32>
 As will be shown shortly, the vast majority of the fine rasterization pipeline consists of performing additions and multiplications between color values. We can choose to run the calculations using either 32-bit floating point numbers that are normalized between 0.0 and 1.0, or 8-bit unsigned integers ranging from 0 to 255. 

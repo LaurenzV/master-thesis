@@ -279,7 +279,7 @@ However, upon rasterization, something different happens: When we first draw the
 
 Up until now, we have always painted our shapes using a single color. While this is by far the most common operation, there are actually many different kinds of fills that can be used. The exact set of filling primitives that is available can vary: For example, in the case of SVG and HTML Canvas, the two main types of paint are _gradients_ and _patterns_ #cite(<svg1_spec>, supplement: [ch. 13]) #cite(<html_spec>, supplement: [ch. 4.12.5.1.10]). The PDF specification, however, defines some additional paints, including triangle meshes and Coons patch meshes #cite(<pdf_spec>, supplement: [p. 192-201]). In this section, we will narrow our focus on the two above-mentioned paints commonly used in web rendering. Instead of explaining the exact semantics of patterns as they are specified in the SVG specification, we will make a simplification and only talk about plain _image fills_, which can be viewed as a subset of pattern fills.
 
-=== Gradients
+=== Gradients <background-gradients>
 Conceptually, gradients represent smooth transitions between two or multiple colors. We consider a  a parametric variable $t$ that ranges between 0.0 and 1.0 and assign a number of colors to a specific position on that range. For example, we could assign the color blue to the position 0.0, the color red to the position 0.4, the color yellow to the position 0.7 and finally the color green to the position 1.0. All of the other positions that have not been explicitly specified are calculated by doing a linear interpolation between the given stops. The result of mapping out the whole range is visualized in @gradient_line.
 
 #figure(

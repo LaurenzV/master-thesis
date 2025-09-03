@@ -1,0 +1,23 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" fill="none" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="55 0 45 45">
+	<defs>
+		<pattern height="10" id="p0" patternUnits="userSpaceOnUse" width="10" x="0" y="0">
+			<path d="M0,0 L0,10" stroke="black" stroke-width="1" />
+			<path d="M0,0 L10,0" stroke="black"  stroke-width="1" />
+			<path d="M0,10 L10,10" stroke="black"  stroke-width="1" />
+			<path d="M10,0 L10,10" stroke="black" stroke-width="1" />
+		</pattern>
+	</defs>
+	<defs>
+		<pattern id="patt1" patternUnits="userSpaceOnUse" x="0" y="0" width="100" height="100" >
+			<image width="100" height="100" xlink:href="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAfQAAAH0CAMAAAD8CC+4AAAAYFBMVEX//wD/3wC//wDAwMD/vwDwwABA/4D/oAD/gID/kAD/gACQkJCAgP/ggAAAv///YADAgACAgIBAgP+ggADQYAD/QAAAgP/AQADfIAD/AACAQACgIAC/AACAAABgAABAAAD4Hh3sAAADV0lEQVR42u3UQQrCQBREwThGFBF3Lrz/GTVgMPEI+jfNBKuu8Ohu94Bb2Tlg7NIQ0Aa6IjqiIzqiIzqiI7roiI7oiI7oiI7oiI7oiI7oiI7oiI7oiI7ooiM6oiM6oiM6oiM6oiM6oiM6oiM6oiM6oiO66IiO6IiO6IiO6IiO6IiO6IiO6IiO6IiO6KIjOqIjOqIjOqIjOqIjOqIjOqIjOqIjOqKLjuiIjuiIjuiIjuiIjuiIjuiIjuiIjuiILjqiIzqiIzrb09aAoewQsO+SpSM6oiM6oiM6oouO6IiO6IiO6IiO6IiO6IiO6IiO6IiO6IguOqIjOqIjOqIjOqIjOqIjOqIjOqIjOqIjOqKLjuiIjuiIjuiITkfaGHDq0qtsDrgGWLp7R3RER3RER3RER3RER3RER3RER3RER3REFx3RER3RER3RER3RER3RER3RER3RER3REV10REd0REd0REd0REd0REd0REd0RGfb0Z8BoiM6oiM6oiM6oiM6oiM6oiM6oiM6oiM6oouO6IiO6IiO6IiO6IiO6IiO6IiO6IiO6IguOqIjOqIjOqIjOqIjOqIjOqIjOqIjOj1EX8qOAWPZEHAKsHRLR3RER3RER3RER3RER3RER3RER3RER3REFx3RER3RER3RER3RER3RER3RER3RER3REV10REd0REd0REd0REd0REd0REd0ROdHrW4pW8seAWOXngGW7t4RHdERHdERHdERHdERHdERHdERHdERHdFFR3RER3RER3RER3RER3RER3RER3RER3REFx3RER3RER3RER3RER3RER3RER3R2Xb0c5dER3RER3RER3RER3RER3RER3RER3TRER3RER3RER3RER3RER3RER3RER3RER3RRUd0REd0REd0REd0REd0REd0REd0REd0RBedP9N2ZVPAO+BRdgmYAizdvSM6oiM6oiM6oiM6oiM6oiM6oiM6oiM6oouO6IiO6IiO6IiO6IiO6IiO6IiO6IiO6IguOqIjOqIjOqIjOqIjOqIjOqIjOqKz7ehzgOiIjuiIjuiIjuiIjuiIjuiIjuiIjuiIjuiiIzqiIzqiIzqiIzqiIzqiIzqiIzqiIzqii47oiI7oiI7oiI7oiI7oiI7oiI7oiM4XHzVJnOc0P0YNAAAAAElFTkSuQmCC" />
+		</pattern>
+	</defs>
+	<rect fill="url(#patt1)" x="0" y="0" width="100" height="100" />
+	<rect fill="url(#p0)" height="100" width="100" x="0" y="0"/>
+	<circle cx="77" cy="22" r="1" fill="black"></circle>
+	<circle cx="72" cy="17" r="1" fill="red"></circle>
+	<circle cx="82" cy="17" r="1" fill="red"></circle>
+	<circle cx="82" cy="27" r="1" fill="red"></circle>
+	<circle cx="72" cy="27" r="1" fill="red"></circle>
+
+</svg>
