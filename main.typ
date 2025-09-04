@@ -24,4 +24,5 @@
 #include "implementation/main.typ"
 #include "evaluation/main.typ"
 #include "conclusion.typ"
+#set heading(numbering: none)
 #include "notice.typ"

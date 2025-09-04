@@ -1,0 +1,106 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-2 -2 516 604">
+    <defs>
+        <!-- Radial Gradient 1 -->
+        <radialGradient id="radgrad1" cx="258" cy="93" r="64" fx="258" fy="93" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(2, 129, 16, 0.33)" />
+            <stop offset="50%" stop-color="rgba(140, 196, 24, 0.53)" />
+            <stop offset="100%" stop-color="rgba(227, 129, 64, 0.04)" />
+        </radialGradient>
+
+        <!-- Radial Gradient 2 -->
+        <radialGradient id="radgrad2" cx="274" cy="316" r="64" fx="274" fy="316" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(19, 37, 255, 0.37)" />
+            <stop offset="50%" stop-color="rgba(134, 151, 42, 0.39)" />
+            <stop offset="100%" stop-color="rgba(80, 67, 122, 0.96)" />
+        </radialGradient>
+
+        <!-- Radial Gradient 3 -->
+        <radialGradient id="radgrad3" cx="80" cy="512" r="64" fx="80" fy="512" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(225, 183, 128, 0.04)" />
+            <stop offset="50%" stop-color="rgba(94, 176, 71, 0.64)" />
+            <stop offset="100%" stop-color="rgba(40, 88, 144, 0.87)" />
+        </radialGradient>
+
+        <!-- Radial Gradient 4 -->
+        <radialGradient id="radgrad4" cx="108" cy="276" r="64" fx="108" fy="276" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(200, 20, 224, 0.26)" />
+            <stop offset="50%" stop-color="rgba(30, 190, 119, 0.91)" />
+            <stop offset="100%" stop-color="rgba(158, 82, 116, 0.97)" />
+        </radialGradient>
+
+        <!-- Radial Gradient 5 -->
+        <radialGradient id="radgrad5" cx="315" cy="341" r="64" fx="315" fy="341" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(224, 168, 233, 0.01)" />
+            <stop offset="50%" stop-color="rgba(132, 154, 232, 0.96)" />
+            <stop offset="100%" stop-color="rgba(6, 48, 84, 0.51)" />
+        </radialGradient>
+
+        <!-- Radial Gradient 6 -->
+        <radialGradient id="radgrad6" cx="198" cy="83" r="64" fx="198" fy="83" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(209, 44, 96, 0.16)" />
+            <stop offset="50%" stop-color="rgba(34, 192, 229, 0.21)" />
+            <stop offset="100%" stop-color="rgba(66, 41, 7, 0.69)" />
+        </radialGradient>
+
+        <!-- Radial Gradient 7 -->
+        <radialGradient id="radgrad7" cx="309" cy="532" r="64" fx="309" fy="532" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(149, 133, 218, 0.51)" />
+            <stop offset="50%" stop-color="rgba(24, 213, 140, 0.19)" />
+            <stop offset="100%" stop-color="rgba(197, 139, 127, 0.30)" />
+        </radialGradient>
+
+        <!-- Radial Gradient 8 -->
+        <radialGradient id="radgrad8" cx="95" cy="379" r="64" fx="95" fy="379" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(169, 64, 155, 0.31)" />
+            <stop offset="50%" stop-color="rgba(207, 193, 234, 0.17)" />
+            <stop offset="100%" stop-color="rgba(4, 10, 96, 0.75)" />
+        </radialGradient>
+
+        <!-- Radial Gradient 9 -->
+        <radialGradient id="radgrad9" cx="225" cy="527" r="64" fx="225" fy="527" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(127, 81, 104, 0.74)" />
+            <stop offset="50%" stop-color="rgba(11, 106, 116, 0.20)" />
+            <stop offset="100%" stop-color="rgba(3, 179, 215, 0.71)" />
+        </radialGradient>
+
+        <!-- Radial Gradient 10 -->
+        <radialGradient id="radgrad10" cx="324" cy="523" r="64" fx="324" fy="523" gradientUnits="userSpaceOnUse">
+            <stop offset="0%" stop-color="rgba(104, 160, 108, 0.64)" />
+            <stop offset="50%" stop-color="rgba(161, 162, 2, 0.74)" />
+            <stop offset="100%" stop-color="rgba(133, 7, 230, 0.17)" />
+        </radialGradient>
+    </defs>
+
+    <!-- Rectangle 1 -->
+    <rect x="194" y="29" width="128" height="128" fill="url(#radgrad1)" />
+
+    <!-- Rectangle 2 -->
+    <rect x="210" y="252" width="128" height="128" fill="url(#radgrad2)" />
+
+    <!-- Rectangle 3 -->
+    <rect x="16" y="448" width="128" height="128" fill="url(#radgrad3)" />
+
+    <!-- Rectangle 4 -->
+    <rect x="44" y="212" width="128" height="128" fill="url(#radgrad4)" />
+
+    <!-- Rectangle 5 -->
+    <rect x="251" y="277" width="128" height="128" fill="url(#radgrad5)" />
+
+    <!-- Rectangle 6 -->
+    <rect x="134" y="19" width="128" height="128" fill="url(#radgrad6)" />
+
+    <!-- Rectangle 7 -->
+    <rect x="245" y="468" width="128" height="128" fill="url(#radgrad7)" />
+
+    <!-- Rectangle 8 -->
+    <rect x="31" y="315" width="128" height="128" fill="url(#radgrad8)" />
+
+    <!-- Rectangle 9 -->
+    <rect x="161" y="463" width="128" height="128" fill="url(#radgrad9)" />
+
+    <!-- Rectangle 10 -->
+    <rect x="260" y="459" width="128" height="128" fill="url(#radgrad10)" />
+
+
+    <rect fill="none" height="600" stroke="black" stroke-width="3" width="512" x="0" y="0"/>
+</svg>

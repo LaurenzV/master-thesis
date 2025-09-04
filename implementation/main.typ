@@ -499,7 +499,3 @@ An important detail to mention is that due to the fact that we are processing st
 
 === Rasterization
 The final part of the pipeline consists of fine rasterization and packing, which is very trivial to parallelize. Remember that after coarse rasterization, our drawing commands are distributed over many wide tiles with the dimension of 256x4 pixels which can all be processed independently from each other. Therefore, each wide tile can easily be processed in parallel without worrying about any data dependencies. In our implementation, this is achieved with a call to the rayon-provided method `par_iter_mut` while iterating over the wide tiles to process them. The main difficulty lies in the fact that our `Pixmap` is a single contiguous memory buffer which cannot be mutably shared across different threads due to the constraints imposed by the Rust compiler, even though doing so would be safe because wide tiles are guaranteed to not overlap each other, ensuring that no memory location is updated simultaneously from two threads. One way of solving this would be to simply use `unsafe` code to work around that restriction. However, we decided to circumvent this issue by instead building a custom _Regions_ abstraction that chops up the whole pixmap into many small mutable slices using the `split_at_mut`, making it possible to write to distinct parts of the pixmap at the same time.
-
-== Comparison
-#todo[Do we want a section on this?]
-
