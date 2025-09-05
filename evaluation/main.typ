@@ -9,7 +9,7 @@ The main idea behind the benchmark harness is to feed various inputs to the rend
  #let entry(title, im) = {
    block(breakable: false)[
      #align(center)[
-     #stack(dir: ttb, spacing: 0.2cm, text(1.0em)[#title], if (im != none) {image("assets/" + im + ".svg")} else {})
+     #stack(dir: ttb, spacing: 0.2cm, text(1.0em)[#title], if (im != none) {image("assets/" + im + ".svg", width: 90%)} else {})
    ]
    ]
  }
@@ -69,7 +69,7 @@ The main idea behind the benchmark harness is to feed various inputs to the rend
     entry("128x128", "rect_128"),
     entry("256x256", "rect_256"),
  ))
-], caption: [The four different configurable knobs of the harness.], placement: auto) <bench-types>
+], caption: [The four different configurable knobs of the benchmarking harness.], placement: auto) <bench-types>
 ] 
 
 The first knob is the _draw mode_, which should be relatively self-explanatory. Choosing *fill* will help us measure the performance of filling shapes, while choosing *stroke* instead will tell us how performant stroking (in particular stroke expansion) is.
@@ -98,8 +98,29 @@ The original benchmark harness#footnote[https://github.com/blend2d/blend2d-apps]
 - Qt6, the renderer that is shipped as part of the Qt application framework.
 - CoreGraphics, the graphics framework that is shipped as part of MacOS.
 
-We decided to exclude Qt6 and CoreGraphics from our benchmarks since they turned out to be very slow in many cases, making it harder to make visualizations of the performance differences.
+We decided to exclude Qt6 and CoreGraphics from our benchmarks since they turned out to be very slow in many cases and made visualizations harder.
 
 Since Vello CPU is a Rust-based renderer, we had to create C bindings#footnote[https://github.com/LaurenzV/vello_cpu_c] to properly integrate it into the harness. We also decided that another intriguing research question was how Vello CPU compares against other Rust-based CPU renderers in particular. To this end, we also created C bindings#footnote[https://github.com/LaurenzV/raqote_c]#footnote[https://github.com/LaurenzV/tiny_skia_c] for `tiny-skia`#footnote[https://github.com/linebender/tiny-skia] and `raqote`#footnote[https://github.com/jrmuizel/raqote], the two currently most commonly used renderers in the Rust ecosystem. To make the comparison fair, all crates have been compiled with the flag `target-feature=+avx2` so that the compiler can make use of AVX2 instructions. On ARM, no additional flags were necessary since the compiler can assume that NEON intrinsics are available by default. 
 
 The operational semantics of the benchmark suite are very simple. Each test will be rendered to a 512x600 pixmap. When starting a test, the harness will enumerate all possible configurations and make repeated calls to render the shape with the given settings. In order to prevent caching, each render call introduces a specific degree of randomness by for example varying the used colors and opacities or by rendering the shape in different locations on the canvas. The harness will perform multiple such render calls and use the measured time to extrapolate how many render calls can be made in 1 millisecond using that specific configuration. To prevent outliers, we repeat this process ten times for each test and renderer and always choose the best result.
+
+In the following, we will show plots that display the benchmark results for a select number of configurations. For each configuration, we show the results of the given test across all shape sizes to make it easy to see the scaling behavior. It is important to note that for easier visualization, the *time axis is always log-scaled* which has the consequence that large differences in rendering times are visually not as pronounced and can only be noticed by looking at the individual time measurements.
+
+== Single-threaded rendering
+We begin the analysis by looking at single-threaded rendering and considering the simplest test case, filling a pixel-aligned rectangle with a solid color. The results are visualized in @solid-fill-recta. There are two points worth highlighting in this figure as they represent a trend that, as will be shown soon, apply to nearly all of the test cases. 
+
+#figure(
+  image("assets/plot_fill_Solid_RectA.pdf"),
+  placement: auto,
+  caption: [The running times for the test "Fill - Solid - RectA".]
+) <solid-fill-recta>
+
+First, it is apparent that Blend2D is the clear winner in this specific benchmark. Regardless of whether we are considering small or larger shape sizes, Blend2D consistently needs the shortest time, both compared to the C++-based as well as the Rust-based renderers and Vello CPU. As will be visible in other plots, this does not just apply to that specific test configuration but to nearly all other configurations as well, confirming the fact that the JIT-based architecture and painstaking optimizations that have been applied to Blend2D over the course of the years have their merit. Given this, for the remainder of this subsection we will mostly focus on comparing Vello CPU to the other renderers and shift our focus back to Blend2D when analyzing multi-threaded rendering.
+
+Secondly, another trend that will become more apparent soon is that Vello CPU seems to have a general weakness for small shape sizes, but similarly to Blend2D shows excellent scaling behavior as the shape size increases. For 8x8 and 16x16, AGG and JUCE are faster when rendering pixel-aligned rectangles, but that difference is completely reversed when considering 128x128 and 256x256. We believe this behavior can easily be explained by considering how sparse strips work. Since the minimum tile size is 4x4, in case we are drawing small geometries there is a very high chance that the whole geometry is represented by strips instead of sparse fill regions. In addition to that, the fixed tile size has the consequence that many pixels that are actually no covered by the shape are still included and incur costs during anti-aliasing calculations and rasterization, which can represent a significant overhead in the overall small per-shape workload. On the other hand, thanks to the architecture, the larger the geometry the more likely it is that it can be represented by large sparse fill regions, which are relatively cheap to process. Other rendering architectures do not make use of such an implicit representation and therefore exhibit worse scaling behavior.
+
+#figure(
+  image("assets/plot_fill_Solid_RectU.pdf"),
+  placement: auto,
+  caption: [The running times for the test "Fill - Solid - RectU".]
+) <solid-fill-rectu>
