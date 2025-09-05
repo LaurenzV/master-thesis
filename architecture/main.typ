@@ -1,7 +1,7 @@
 #import "@preview/subpar:0.2.2"
 #import "../utils.typ": todo
 
-= Implementation <implementation>
+= Architecture <architecture>
 In this section, we will first showcase an example code snippet to demonstrate how Vello CPU's API works. Afterwards, the majority of the section will be dedicated to explaining each part of the rendering pipeline in Vello CPU. Finally we will illustrate how the pipeline was accelerated by employing SIMD and multi-threading.
 
 == API <api>

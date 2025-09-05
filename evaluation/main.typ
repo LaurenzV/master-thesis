@@ -96,7 +96,7 @@ The original benchmark harness#footnote[https://github.com/blend2d/blend2d-apps]
 - AGG (Anti-Grain Geometry), yet another 2D renderer written in C++.
 - JUCE, the renderer that is shipped as part of the C++-based JUCE application framework.
 - Qt6, the renderer that is shipped as part of the Qt application framework.
-- CoreGraphics, the graphics framework that is shipped as part of MacOS.
+- CoreGraphics, the graphics framework that is shipped as part of Mac OS.
 
 We decided to exclude Qt6 and CoreGraphics from our benchmarks since they turned out to be very slow in many cases and made visualizations harder.
 
