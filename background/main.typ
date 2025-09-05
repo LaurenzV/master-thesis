@@ -227,7 +227,7 @@ There are two additional points worth highlighting regarding blending and compos
 - They are not exclusive concepts but _complementary_. Whenever we want to draw a new shape and integrate it into everything else we have drawn so far, we _first_ perform blending for each pixel to determine a (possibly) new source color and _then_ perform compositing to determine how the result is integrated into the existing drawings.
 - While certain blend modes and composition operators are occasionally used to achieve specific visual effects, especially in web graphics, by far the most common operation is to use the _Normal_ blend mode and source-over compositing, which is a relatively straight-forward operation and has the visual effect of placing the new shape _on top_ of the existing ones. The combination of these two modes is also referred to as _simple alpha compositing_ @w3c2015compositing.
 
-== Anti-aliasing
+== Anti-aliasing <anti-aliasing>
 
 As was elaborated in @rendering_intro, the main goal of 2D rendering is to convert vector graphics into pixel representation. However, a fundamental problem is that since vector graphics are defined in a continuous space, it is possible that certain parts of the shape only _partially_ cover a pixel, as can be seen for example in @butterfly_outlined. Since a pixel can only emit one specific color, there is no direct way of retaining that information after the conversion process. There are two ways this problem can be dealt with.
 

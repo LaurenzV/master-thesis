@@ -1,0 +1,44 @@
+<svg viewBox="1 1 6 6" xmlns="http://www.w3.org/2000/svg">
+<defs>
+<pattern height="1" id="p0" patternUnits="userSpaceOnUse" width="1" x="0" y="0">
+<path d="M0,0 L0,1" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+<path d="M0,0 L1,0" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+<path d="M0,1 L1,1" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+<path d="M1,0 L1,1" stroke="grey" stroke-opacity="0.3" stroke-width="0.05" vectorEffect="non-scaling-stroke"/>
+</pattern>
+</defs>
+<rect fill="url(#p0)" height="50" stroke="black" stroke-width="0.25" width="50" x="0" y="0"/>
+    <rect x = "5" y="5" width="1" height="1" fill="blue" fill-opacity="0.2" />
+<rect x = "4" y="5" width="1" height="1" fill="blue" fill-opacity="0.2" />
+<rect x = "5" y="4" width="1" height="1" fill="blue" fill-opacity="0.2" />
+<rect x = "4" y="4" width="1" height="1" fill="blue" fill-opacity="0.2" />
+<rect x = "5" y="3" width="1" height="1" fill="blue" fill-opacity="0.2" />
+<rect x = "5" y="2" width="1" height="1" fill="blue" fill-opacity="0.2" />
+
+<rect x="2" y="2" width="4" height="4" stroke="black" fill="none" stroke-width="0.1"></rect>
+    
+    
+    
+    <circle cx="2.5" cy="2.5" r="0.1"></circle>
+    <circle cx="3.5" cy="2.5" r="0.1"></circle>
+    <circle cx="4.5" cy="2.5" r="0.1"></circle>
+    <circle cx="5.5" cy="2.5" r="0.1"></circle>
+
+    <circle cx="2.5" cy="3.5" r="0.1"></circle>
+    <circle cx="3.5" cy="3.5" r="0.1"></circle>
+    <circle cx="4.5" cy="3.5" r="0.1"></circle>
+    <circle cx="5.5" cy="3.5" r="0.1"></circle>
+
+    <circle cx="2.5" cy="4.5" r="0.1"></circle>
+    <circle cx="3.5" cy="4.5" r="0.1"></circle>
+    <circle cx="4.5" cy="4.5" r="0.1"></circle>
+    <circle cx="5.5" cy="4.5" r="0.1"></circle>
+
+    <circle cx="2.5" cy="5.5" r="0.1"></circle>
+    <circle cx="3.5" cy="5.5" r="0.1"></circle>
+    <circle cx="4.5" cy="5.5" r="0.1"></circle>
+    <circle cx="5.5" cy="5.5" r="0.1"></circle>
+    
+    <line x1="2.8" y1="9" x2="7" y2="0.1" stroke="red" stroke-width="0.05"></line>
+
+</svg>

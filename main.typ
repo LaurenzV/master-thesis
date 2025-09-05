@@ -22,6 +22,7 @@
 #include "introduction.typ"
 #include "background/main.typ"
 #include "architecture/main.typ"
+#include "comparison/main.typ"
 #include "evaluation/main.typ"
 #include "conclusion.typ"
 #set heading(numbering: none)
