@@ -1,4 +1,4 @@
-= Comparison
+= Comparison <comparison>
 
 In this section, we will briefly contrast the architecture of two different CPU-based 2D renderers against Vello CPU to highlight similarities but also differences. Since there is little literature describing the inner workings of those, we will base most of our descriptions on a best-effort analysis of their source code.
 
