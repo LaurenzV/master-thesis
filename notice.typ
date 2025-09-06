@@ -1,6 +1,6 @@
 = Contribution Notice
 
-It needs to be noted that the project of building Vello CPU is part of a bigger collaboration involving some external contributors, where another goal is to build an additional 2D renderer based on the sparse strips paradigm that utilizes the GPU instead to achieve better performance. Therefore, some parts of the pipeline that are explained in @architecture of this thesis are included for the sake of completeness but were at least partly implemented by other parties. Because of this, the core contributions that have been made specifically as part of this thesis are listed below for full transparency:
+It needs to be noted that the project of building Vello CPU is part of a bigger collaboration involving some external contributors, where another goal is to build an additional 2D renderer based on the sparse strips paradigm that utilizes the GPU instead to achieve better performance. Therefore, the description of some parts of the pipeline in @architecture of this thesis are included for the sake of completeness but were at least partly implemented by other parties. Because of this, for full transparency the core contributions that have been made specifically as part of this thesis are listed below:
 
 - Implementing the whole rasterization stage (fine rasterization + packing), which includes
   - the `f32`-based and `u8`-based rendering pipeline.
