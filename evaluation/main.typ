@@ -107,6 +107,7 @@ The operational semantics of the benchmark suite are very simple. Each test will
 In the following, we will show plots that display the benchmark results for a select number of configurations. For each configuration, we show the results of the given test across all shape sizes to make it easy to see the scaling behavior. It is important to note that for easier visualization, the *time axis is always log-scaled* which has the consequence that large differences in rendering times are visually not as pronounced and can only be noticed by looking at the individual time measurements.
 
 == Single-threaded rendering
+=== Filling
 We begin the analysis by looking at single-threaded rendering and considering the simplest test case, filling a pixel-aligned rectangle with a solid color. The results are visualized in @solid-fill-recta. There are two points worth highlighting in this figure as they represent a trend that, as will be shown soon, apply to most test cases. 
 
 #figure(
@@ -154,3 +155,12 @@ There does not seem to be a particularly easy solution to the problem. One appro
   placement: auto,
   caption: [The running times for the test "Fill - Solid - World".]
 ) <solid-fill-world>
+
+=== Stroking
+Let us devote our attention to stroking instead. There are two cases that are worth distinguishing between: Stroking of straight lines and stroking of curves. For lines, we can consider the "World" shape again as it is depicted in @solid-stroke-world. As can be seen, Blend2D once again by far leads the score but is followed second by Vello CPU, which (apart from JUCE) leads with another significant gap compared to the remaining renderers. There is also some interesting behavior going on where different renderers react differently to different sizes: Raqote seems to deal worse with small shapes but better with larger ones, while for other renderers the sweet spot is somewhere in the middle. Determining the exact reason for these discrepancies proves difficult, but highlights the fact that different renderers use different algorithms for stroking.
+
+#figure(
+  image("assets/plot_stroke_Solid_World.pdf"),
+  placement: auto,
+  caption: [The running times for the test "Stroke - Solid - World".]
+) <solid-stroke-world>
