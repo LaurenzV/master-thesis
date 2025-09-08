@@ -100,18 +100,18 @@ The original benchmark harness#footnote[https://github.com/blend2d/blend2d-apps]
 
 We decided to exclude Qt6 and CoreGraphics from our benchmarks since they turned out to be very slow in many cases and made visualizations harder.
 
-Since Vello CPU is a Rust-based renderer, we had to create C bindings#footnote[https://github.com/LaurenzV/vello_cpu_c] to properly integrate it into the harness. We also decided that another intriguing research question was how Vello CPU compares against other Rust-based CPU renderers in particular, as none were included in the original benchmarking harness. To this end, we also created C bindings#footnote[https://github.com/LaurenzV/raqote_c]#footnote[https://github.com/LaurenzV/tiny_skia_c] for `tiny-skia`#footnote[https://github.com/linebender/tiny-skia] and `raqote`#footnote[https://github.com/jrmuizel/raqote], the two currently most commonly used CPU renderers in the Rust ecosystem. To make the comparison fair, all crates have been compiled with the flag `target-feature=+avx2` on x86 so that the compiler can make use of AVX2 instructions. On ARM, no additional flags were necessary since the compiler can assume that NEON intrinsics are available by default. 
+Since Vello CPU is a Rust-based renderer, we had to create C bindings#footnote[https://github.com/LaurenzV/vello_cpu_c] to properly integrate it into the harness. We also decided that another intriguing research question was how Vello CPU compares against other Rust-based CPU renderers in particular, as none were included in the original benchmarking harness. To this end, we also created C bindings#footnote[https://github.com/LaurenzV/raqote_c]#footnote[https://github.com/LaurenzV/tiny_skia_c] for `tiny-skia`#footnote[https://github.com/linebender/tiny-skia] and `raqote`#footnote[https://github.com/jrmuizel/raqote], the two currently most commonly used CPU renderers in the Rust ecosystem. `tiny-skia`is more or less a direct port of a small subset of Skia to rust, while raqote is a from-scratch implementation that does still borrow many ideas from Skia. To make the comparison fair, all crates have been compiled with the flag `target-feature=+avx2` on x86 so that the compiler can make use of AVX2 instructions. On ARM, no additional flags were necessary since the compiler can assume that NEON intrinsics are available by default. 
 
 The operational semantics of the benchmark suite are very simple. Each test will be rendered to a 512x600 pixmap. When starting a test, the harness will enumerate all possible configurations and make repeated calls to render the shape with the given settings. In order to prevent caching, each render call introduces some randomness by for example varying the used colors and opacities or by rendering the shape in different locations on the canvas. The harness will perform multiple such render calls and use the measured time to extrapolate how many render calls can be made in 1 millisecond using that specific configuration. To prevent outliers, we repeat this process ten times for each test and always choose the best result.
 
-In the following, we will show plots that display the benchmark results for a select number of configurations. For each configuration, we show the results of the given test across all shape sizes to make it easy to see the scaling behavior. It is important to note that for easier visualization, the *time axis is always log-scaled* which has the consequence that large differences in rendering times are visually not as pronounced and can only be noticed by looking at the individual time measurements.
+In the following, we will show plots that display the benchmark results for a select number of configurations. For each configuration, we show the results of the given test across all shape sizes to make it easy to see the scaling behavior. It is important to note that for easier visualization, the *time axis is always log-scaled* which has the consequence that large differences in rendering times are visually not as pronounced and can only be noticed by looking at the individual time measurements. For multi-threaded rendering, we also show the speedup factor in comparison to single-threaded rendering.
 
 == Single-threaded rendering
 === Filling
 We begin the analysis by looking at single-threaded rendering and considering the simplest test case, filling a pixel-aligned rectangle with a solid color. The results are visualized in @solid-fill-recta. There are two points worth highlighting in this figure as they represent a trend that, as will be shown soon, apply to most test cases. 
 
 #figure(
-  image("assets/plot_fill_Solid_RectA.pdf"),
+  image("assets/st_fill_Solid_RectA.pdf"),
   placement: auto,
   caption: [The running times for the test "Fill - Solid - RectA".]
 ) <solid-fill-recta>
@@ -125,7 +125,7 @@ We believe this behavior can easily be explained by considering how sparse strip
 Another reason that Vello CPU does do slightly worse in this particular case is that we decided to not include a special-cased path for pixel-aligned rectangles, which becomes apparent when contrasting the results to @solid-fill-rectu, where unaligned rectangles are drawn. In that figure, the results for Vello CPU more or less stay the same, while for example JUCE and AGG show worse performance. Overall, it still seems safe to draw the conclusion that Vello CPU lands a second place for those two configurations.
 
 #figure(
-  image("assets/plot_fill_Solid_RectU.pdf"),
+  image("assets/st_fill_Solid_RectU.pdf"),
   placement: auto,
   caption: [The running times for the test "Fill - Solid - RectU".]
 ) <solid-fill-rectu>
@@ -133,7 +133,7 @@ Another reason that Vello CPU does do slightly worse in this particular case is 
 Next, we want to analyze the performance of general edge rasterization by considering the "PolyNZi40" test case in @solid-fill-polynz40. As can be seen, this is another area where Vello CPU shines: While the gap to Blend2D is larger for small sizes, it becomes much closer for larger sizes. In particular, note how Vello CPU is significantly faster than any of the other renderers, both for smaller sizes but especially for larger sizes. It is difficult to grasp why exactly the other renderers are performing much worse here, but it is possible to make theories. For example, remember that Raqote uses an "active" edge list to keep track of the active edges per scan-line. This means that each time the renderer moves to a new scan-line, it needs to do much more work to discard, add and sort the edges, resulting in additional overhead for every pixel row that is analyzed. On the other hand, in Vello CPU adding more lines simply means adding another set of tiles that we need to perform anti-aliasing for, but adding more time has (apart from more sorting overhead) no impact whatsoever on the processing times of the other tiles.
 
 #figure(
-  image("assets/plot_fill_Solid_PolyNZi40.pdf"),
+  image("assets/st_fill_Solid_PolyNZi40.pdf"),
   placement: auto,
   caption: [The running times for the test "Fill - Solid - PolyNZi40".]
 ) <solid-fill-polynz40>
@@ -141,7 +141,7 @@ Next, we want to analyze the performance of general edge rasterization by consid
 Let us shift our focus to @solid-fill-fish next, where we can see one of the areas where Vello CPU performs slightly worse. While performance is yet again only second to Blend2D for larger sizes, for 8x8 and sometimes 16x16 we are a bit smaller than some other renderers like JUCE. However, we believe that fixing this discrepancy is simply about implementing an optimization that has not been implemented so far: A look at the profiler reveals that more than 60% of the time is spent in the curve flattening stage. Currently, each curve goes through the whole flattening process regardless of its size. But for such a small geometry, it is safe to assume that many of the curves are so short that they could just be straight-up approximated by a single line instead of tediously going through all steps of flattening. We believe that once a heuristic is implemented that handles such curves more efficiently, it should be possible close that gap.
 
 #figure(
-  image("assets/plot_fill_Solid_Fish.pdf"),
+  image("assets/st_fill_Solid_Fish.pdf"),
   placement: auto,
   caption: [The running times for the test "Fill - Solid - Fish".]
 ) <solid-fill-fish>
@@ -151,16 +151,81 @@ Let us consider @solid-fill-world, where the weakness for smaller geometry sizes
 There does not seem to be a particularly easy solution to the problem. One approach could be introducing a kind of "line-merging" stage where multiple small lines are merged into larger ones at the cost of some precision, but this seems to be a rather complicated optimization. Otherwise, it might also be worth investigating faster sorting algorithms specialized for a large number of tiles, but the potential for gains here does not seem that significant either.
 
 #figure(
-  image("assets/plot_fill_Solid_World.pdf"),
+  image("assets/st_fill_Solid_World.pdf"),
   placement: auto,
   caption: [The running times for the test "Fill - Solid - World".]
 ) <solid-fill-world>
 
 === Stroking
-Let us devote our attention to stroking instead. There are two cases that are worth distinguishing between: Stroking of straight lines and stroking of curves. For lines, we can consider the "World" shape again as it is depicted in @solid-stroke-world. As can be seen, Blend2D once again by far leads the score but is followed second by Vello CPU, which (apart from JUCE) leads with another significant gap compared to the remaining renderers. There is also some interesting behavior going on where different renderers react differently to different sizes: Raqote seems to deal worse with small shapes but better with larger ones, while for other renderers the sweet spot is somewhere in the middle. Determining the exact reason for these discrepancies proves difficult, but highlights the fact that different renderers use different algorithms for stroking.
+Let us devote our attention to stroking next. There are two cases that worth exploring: Stroking of straight lines and stroking of curves. For lines, we can consider the "World" shape again as it is depicted in @solid-stroke-world. As can be seen, Blend2D once again by far leads the score, but is followed second by Vello CPU, which (apart from JUCE) leads with another significant gap compared to the remaining renderers. There is also some interesting behavior going on where different renderers react differently to different sizes: Raqote seems to deal worse with small shapes but better with larger ones, while for other renderers the sweet spot is somewhere in the middle. Determining the exact reason for these discrepancies proves difficult, but highlights the fact that different renderers use different algorithms for stroking.
 
 #figure(
-  image("assets/plot_stroke_Solid_World.pdf"),
+  image("assets/st_stroke_Solid_World.pdf"),
   placement: auto,
   caption: [The running times for the test "Stroke - Solid - World".]
 ) <solid-stroke-world>
+
+In @solid-stroke-butterfly, we can observe the running times when stroking a curved shape instead. We once again observe that in this particular case, Vello CPU does not perform as well as other renderers for small shape sizes, but seems to make up for the differences as the dimensions of the shape increase. In this case, we do not attribute the sluggish performance to the fixed size of 4x4 for a tile. A look at the profile yields that more than 70% of the time is spent in stroke expansion, leading us to the conclusion that there seems to be an inefficiency in the current algorithm. Due to time constraints, we were not able to investigate this in more detail and fix it.
+
+#figure(
+image("assets/st_stroke_Solid_Butterfly.pdf"),
+  placement: auto,
+  caption: [The running times for the test "Stroke - Solid - Butterfly".]
+) <solid-stroke-butterfly>
+
+Overall, we draw the conclusion that there definitely is more work left to be done on the stroking side of things, but the overall performance is at least comparable to other renderer and does stand out when considering larger shape sizes.
+
+=== Paints
+Finally, let us analyze the performance of Vello CPU when complex paints such as linear gradients (in @linear-fill-recta) and images (in @pattern-fill-recta).
+
+#figure(
+image("assets/st_fill_Linear_RectA.pdf"),
+  placement: auto,
+  caption: [The running times for the test "Fill - Linear - RectA".]
+) <linear-fill-recta>
+
+#figure(
+image("assets/st_fill_Pattern_NN_RectA.pdf"),
+  placement: auto,
+  caption: [The running times for the test "Fill - Pattern_NN - RectA".]
+) <pattern-fill-recta>
+
+As is visible in the first figure, Vello CPU has a significant overhead when rendering a gradient with a small shape but performs incredibly well for larger ones. The reason for that is relatively simple. There are two general approaches for how to deal with gradients: The first method is to precompute a lookup table with a fixed resolution and then simply sample from that table, as is done in Vello CPU. The second method (for example used by tiny-skia and therefore most likely also Skia) is to do no pre-computation at all but instead do the color interpolation on the pixel-level. The disadvantage of the former method is that computing a LUT of this size is more time-consuming if the shape we will draw only covers very few pixels, but the advantage is that it exhibits much better scaling behavior as the size of the shape grows, as can be seen in the benchmark. It should be noted though that Blend2D also uses the LUT approach and still has the best runtime for 8x8, suggesting that there are probably ways of improving the computation in Vello CPU as well.
+
+For image fills, we see that Vello CPU is not doing particularly well, but performance is not bad either and matches most of the other renderers. A particular problem that we are facing is that for nearest-neighbor rendering of images, the performance is really determined by how fast you can sample a pixel from the original image. Since Rust emphasizes memory safety, each access to a memory location is preceded by a bounds-check, which has been shown to lead to a non-significant slowdown. We could have resorted to using unsafe code to circumvent this, but in the end decided that it was not worth it to potentially introduce memory-safety issues by doing so.
+
+== Multi-threaded
+Next, we want to more closely analyze Vello CPU's multi-threaded rendering performance. Since Blend2D is the only other renderer that supports such a mode, we will use this as the main reference point for comparison, putting a particular emphasis on analyzing the speedup that is achieved with different thread counts. As will be seen shortly, both renderers can give incredible performance boosts depending on the exact configuration but are far away from achieving completely linear speedup relative to the thread count. Blend2D seems to overall have the more "well-rounded" multi-threading mode, achieving decent speedup even for simple paths where Vello CPU has some shortcomings. On the other hand, Vello CPU's approach to multi-threading seems to lead to higher speedups as the processing time per path increases.
+
+#figure(
+image("assets/mt_fill_Solid_RectA.pdf"),
+  placement: auto,
+  caption: [The running times for the test "Fill - Solid - RectA".]
+) <mt-solid-fill-recta>
+
+We begin our analysis by once again considering the simplest case of drawing simple rectangles in @mt-solid-fill-recta. A pattern that will also become evident in other benchmarks is that the speedup for smaller shapes is usually smaller than for larger ones. The reason for this is simply that the needed processing time for handling small paths is so small that any speedup is completely eclipsed by the overhead that comes from using multi-threading. As the size of the rectangle increases, more rasterization work needs to be performed which implies longer processing time and therefore better utilization of different threads. A performance analysis of Vello CPU using a profiler confirms the fact that for 8x8, the majority of the time in each thread is spent on yielding and overhead that arises from the communication. For 256x256, the speedup does reach 3.6 but is still below Blend2D's speedup of 4.7x. Profiling revealed that the main bottleneck seems to be coarse rasterization. In general, coarse rasterization only consumes very little time, but since this is the only part of the pipeline that is currently not parallelized, it does become more significant as the number of threads increases. We therefore consider researching ways to lift this limitation important future work (see @conclusion).
+
+#figure(
+image("assets/mt_fill_Solid_PolyNZi40.pdf"),
+  placement: auto,
+  caption: [The running times for the test "Fill - Solid - PoltNZi40".]
+) <mt-solid-fill-polynz40>
+
+As can be seen in @mt-solid-fill-polynz40, things do start to look better as the complexity of the path increases. In the given figure, we are still only considering line-based shapes meaning that the most time-consuming step will be strip generation, but as can be seen this already yields much better speedups. For small shapes, we are still restricted to a speedup of less than two (note in particular how the speedup actually gets worse as the thread number increases), but for larger versions of the shape the speedup gets increasingly better.
+
+Once we throw curve segments or strokes into the mix, the path processing time increases even further, leading to even higher speedups as can be observed in @mt-solid-fill-fish. Blend2D achieves a speedup of around 3x-4x at most, while Vello CPU is able to push the boundary further to a speedup of around 5x.
+
+#figure(
+image("assets/mt_fill_Solid_Fish.pdf"),
+  placement: auto,
+  caption: [The running times for the test "Fill - Solid - Fish".]
+) <mt-solid-fill-fish>
+
+Finally, remember that the second component that can be parallelized in the pipeline concerns fine rasterization, which can become a bottleneck when drawing shapes with complex paints. As can be seen in @mt-linear-fill-recta, we do get higher speedups when filling rectangles using a linear gradient instead of solid colors (for inexplicable reasons, Blend2D actually experiences a slowdown for small sizes), although the speedup is still far from ideal. To us, this is unexpected as profiling reveals that more than 90% of the time of the time is indeed spent in fine rasterization, which is clearly much more trivial to parallelize as there are no dependencies between the wide tiles. We would therefore expect test cases where fine rasterization is the bottleneck to yield higher relative speedups than test cases where path rendering consumes the most time, which does not seem to be the case.
+
+#figure(
+image("assets/mt_fill_Linear_RectA.pdf"),
+  placement: auto,
+  caption: [The running times for the test "Fill - Linear - RectA".]
+) <mt-linear-fill-recta>
+
