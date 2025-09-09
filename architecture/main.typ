@@ -2,7 +2,7 @@
 #import "../utils.typ": todo
 
 = Architecture <architecture>
-In this section, we will first showcase an example code snippet to demonstrate how Vello CPU's API works. Afterwards, the majority of the section will be dedicated to explaining each part of the rendering pipeline in Vello CPU. Finally we will illustrate how the pipeline was accelerated by employing SIMD and multi-threading.
+In this section, we will first showcase an example code snippet to demonstrate how Vello CPU's API works. Afterwards, the majority of the section will be dedicated to explaining each part of the rendering pipeline in Vello CPU. Finally, we will illustrate how the pipeline was accelerated by employing SIMD and multi-threading.
 
 == API <api>
 @api_example_Listing provides a small example that demonstrates how to use Vello CPU's Rust API for basic rendering.
