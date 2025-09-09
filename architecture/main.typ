@@ -161,7 +161,7 @@ One of the core goals of strip generation is to calculate the opacity values for
 
 In contrast, using our method, the factor of $4$ completely falls away since we are not storing RGBA values but just single opacity values between $0$ and $255$. In addition to that, even when scaling an image in both directions, the number of _anti-aliased pixels_ tends to increase linearly instead of quadratically, resulting in much lighter storage requirements.
 
-=== Merging strips
+=== Merging tiles into strips
 The first step of the algorithm is relatively straight-forward: We iterate over all tiles (remember that they are already sorted in row-major order!), and merge horizontally-adjacent tiles into single _strips_. These strips have the same height as the tiles, but the width can vary depending on how many adjacent tiles there are, as is visualized in @butterfly-strip-areas. The blue colored strips represent any area where we will explicitly calculate opacity values for anti-aliasing. Any pixel not falling within a strip will _not_ be explicitly stored and is represented implicitly.
 
 #figure(
@@ -223,7 +223,9 @@ struct Strip {
   caption: [The information stored inside of a strip.],
 ) <strip-fields>
 
-With the sparse strip representation concluded, the path rendering stage of the pipeline (as shown in @overview_pipeline) concludes. There are many different things that can now be done with that intermediate representation. On the one hand, we can pass it on to the next stage to commence the actual rasterization process. On the other hand, we could for example store the path for caching purposes so that it can be reused in the future without having to redo all of the calculations.
+With the sparse strip representation concluded, the path rendering stage of the pipeline (as shown in @overview_pipeline) concludes. The unique aspect of sparse strips is that the representation is very versatile and can be consumed in multiple ways. On the one hand, we can pass it on to the next stage to commence the actual rasterization process and render it onto the screen. 
+
+On the other hand, we could for example use it for caching purposes: Imagine that you want to draw a GUI at 60 frames per second. Over the course of time, it is likely that the vast majority of the GUI remains static and only small parts change each frame. Because of this, we can opt to compute the sparse strips representation of elements like buttons and text fields during the first run and cache them, so that in subsequent runs we do not have to rerun the whole path rendering stage for those elements, saving a lot of time. The usual approach for caching would be to render the elements to a bitmap image with a given size, but by virtue of having this intermediate representation we can achieve the same goal in a much more memory-efficient way.
 
 === Tile size
 Initially, it was claimed that the point of strip rendering is to only calculate the opacities of _anti-aliased pixels_. However, looking at @butterfly-all-strips, it becomes apparent that this is not entirely true: There are many pixels that either have full opacity or no opacity at all and are therefore not at all anti-aliased. They were only included by virtue of being in the _vicinity_ of anti-aliased and being part of the same tile.
