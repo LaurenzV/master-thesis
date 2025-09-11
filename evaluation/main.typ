@@ -194,7 +194,7 @@ As is visible in the first figure, Vello CPU has a significant overhead when ren
 
 For image fills, we see that Vello CPU is not doing particularly well, but performance is not bad either and matches most of the other renderers. A particular problem that we are facing is that for nearest-neighbor rendering of images, the performance is really determined by how fast you can sample a pixel from the original image. Since Rust emphasizes memory safety, each access to a memory location is preceded by a bounds-check, which has been shown to lead to a non-significant slowdown. We could have resorted to using unsafe code to circumvent this, but in the end decided that it was not worth it to potentially introduce memory-safety issues by doing so.
 
-== Multi-threaded
+== Multi-threaded rendering
 Next, we want to more closely analyze Vello CPU's multi-threaded rendering performance. Since Blend2D is the only other renderer that supports such a mode, we will use this as the main reference point for comparison, putting a particular emphasis on analyzing the speedup that is achieved with different thread counts. As will be seen shortly, both renderers can give incredible performance boosts depending on the exact configuration but are far away from achieving completely linear speedup relative to the thread count. Blend2D seems to overall have the more "well-rounded" multi-threading mode, achieving decent speedup even for simple paths where Vello CPU has some shortcomings. On the other hand, Vello CPU's approach to multi-threading seems to lead to higher speedups as the processing time per path increases.
 
 #figure(
