@@ -229,5 +229,5 @@ image("assets/mt_fill_Linear_RectA.pdf"),
   caption: [The running times for the test "Fill - Linear - RectA".]
 ) <mt-linear-fill-recta>
 
-We conclude that both renderers have powerful multi-threading capabilities but have different strengths and weaknesses.
+We conclude that both renderers have powerful multi-threading capabilities but with different strengths and weaknesses.
 
