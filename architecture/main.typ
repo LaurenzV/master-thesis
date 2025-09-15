@@ -37,7 +37,7 @@ By calling the `render_to_pixmap` method, we can now instruct Vello CPU to actua
 ) <api_example_result>
 
 
-== Architecture Overview <architecture_overview>
+== Architecture overview <architecture_overview>
 In order to convert a vector image into a raster image, there are a lot of intermediate steps that need to be performed to arrive at the final result. While a few steps are virtually universal and done by nearly all renderers in some shape or form, the exact implementation of the whole rendering pipeline varies wildly across different implementations.
 
 One of the interesting aspects of the design of Vello CPU is that it has a very modular architecture where each step takes a specific kind of input and produces a concrete kind of intermediate output which can then be consumed by the next stage in the pipeline. There are no cross-dependencies between non-consecutive stages. As will be seen in the following subsections, this property makes it very easy to explain the functionality of each module in isolation and visualize the intermediates results that are produced after passing through each stage. The stages of the rendering pipeline and their dependencies are illustrated in @overview_pipeline. A summary of each stage is provided below, but they will be explained more clearly later on.
@@ -349,7 +349,7 @@ Instead, what we do is that we _precompute_ a LUT (look-up table) that contains 
 === `Fill` vs `AlphaFill` commands
 Previously, we introduced the distinction between the `Fill` and `AlphaFill` commands, the only difference being that alpha fill commands apply an additional opacity to account for anti-aliasing. To account for that, in case we are processing an alpha fill command we simply multiply the calculated raw pixel value by the opacity for anti-aliasing before processing it further. Apart from that small additional step, the two commands can be treated completely the same.
 
-=== Compositing and Blending
+=== Compositing and blending
 After having determined the raw pixel value, we arrive at the core part of fine rasterization that does blending and compositing. If we are only drawing a single shape, we could simply copy the raw pixel values into the scratch buffer and we would be done. However, the key is that a rendering engine needs to account for the fact that multiple shapes with different paints can be overlapping each other. In particular, the scratch buffer might contain colored pixels from previous drawing instructions which we now need to combine with the generated pixels from our current drawing command according to the rules that were outlined in @compositing and @blending-sect.
 
 ==== Alpha-compositing
@@ -483,7 +483,7 @@ One core motivation for exploring the sparse strips approach was that we believe
 
 Everything starts with the creation of the `RenderContext` (see @api), where the user can set the number of threads that should be used for rendering. In case it is set to 0, no multi-threading will be activated and the code path for single-threaded rendering will be used. Otherwise, the `RenderContext` will spawn a thread pool containing `num_threads` threads, meaning that including the main thread, there will be `num_threads + 1` active threads. In order to manage the thread pool we use rayon#footnote[https://github.com/rayon-rs/rayon (accessed on 11.09.2025)], a Rust library for data parallelism. 
 
-=== Path Rendering
+=== Path rendering
 The core insight necessary to understand the first part of multi-threading is that path rendering (ranging from stroke expansion or flattening to strips generation) is essentially a pure function that takes a single path as input and returns a vector of strips as the output. Since there are no other dependencies, the rendering of a single path can be completely outsourced without requiring any additional communication between the main thread and the child thread until the strips have been generated. These stages of the pipeline often take up the largest chunk of time. Being able to run these stages in parallel can therefore lead to very considerable speedups.
 
 In practice, everything starts by the user emitting a command like `fill_path` or `stroke_path`, upon which the main thread first stores the command inside of a local queue. The reason for doing this instead of directly sending the command to a thread is that we make use of a _batching mechanism_ to increase the efficiency of the whole process. While multi-threading itself is powerful, a considerable problem is that if the amount of work we farm out to the threads is too small, the overhead that arises from context switches and the bookkeeping done by rayon will be so large that any benefit of parallelism is essentially rendered useless. 
@@ -498,7 +498,7 @@ Two key implementation details make sure that this property is always upheld. Fi
 
 Assume for example that thread 1 sends the generated strips of path 1 via the channel, and subsequently thread 2 sends the strips for path 2. In this case, the main thread can just receive the results normally and use them during coarse rasterization. However, assume that now thread 3 sends the data for path 5 and thread 2 sends the data for path 4, while path 3 is still being processed in thread 1. In this case, the main thread will not receive any messages until thread 1 is done, after which the main thread will receive the messages with ID 3, 4 and 5, in that order. This makes it possible to prevent bugs caused by the indeterministic nature of multi-threading.
 
-=== Coarse Rasterization
+=== Coarse rasterization
 As was mentioned previously, coarse rasterization is currently the only part of the pipeline that runs strictly sequentially, the reason being that it is not trivially parallelizable. In the multi-threaded setup, each time after processing a `fill_path` or `stroke_path` command, the main thread first sends the batched render tasks and then checks the queue for any already-existing strips that can be processed for coarse rasterization.
 
 An important detail to mention is that due to the fact that we are processing strips asynchronously, it could happen that the user makes a call to `render_to_pixmap` before all strips have been generated, which would be fatal because unprocessed rendering tasks would then simply not be drawn at all. Because of this, as was demonstrated in @api_example_Listing, before starting fine rasterization, the user first has to call `flush`, which will block the main thread until coarse rasterization has completed for all paths.

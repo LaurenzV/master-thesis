@@ -47,7 +47,7 @@
 
   #set align(left)
   #set par(justify: true)
-  #set text(font: "PT Serif", size: 11pt)
+  #set text(font: "Libertinus Serif", size: 12pt)
   #set page(margin: (x: 3.0cm, y: 4.5cm))
 
   #v(0.3cm)
