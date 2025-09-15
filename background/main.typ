@@ -237,16 +237,17 @@ figure(image("assets/butterfly_outlined_zoomed.pdf", width: 60%), caption: [
     Examples of pixel coverages.
   ]), <butterfly_outlined>,
 
-  grid(columns: (60%, 40%), [
-    #figure(image("assets/butterfly_anti_aliased.pdf"), caption: [
-    Rasterizing with anti-aliasing. #linebreak()  #linebreak()
-  ]) <butterfly_anti_aliased>
-  ],
+  grid(columns: (40%, 60%),
   [
     #figure(image("assets/butterfly_no_anti_aliasing.pdf", width: 74%), caption: [
     Rasterizing without anti-aliasing.
   ]) <butterfly_aliased>
   ],
+  [
+    #figure(image("assets/butterfly_anti_aliased.pdf"), caption: [
+    Rasterizing with anti-aliasing. #linebreak()  #linebreak()
+  ]) <butterfly_anti_aliased>
+  ]
 ),
   columns: (1fr),
   caption: [A butterfly rasterized to a 20x20 screen with and without anti-aliasing.],
@@ -255,9 +256,9 @@ figure(image("assets/butterfly_outlined_zoomed.pdf", width: 60%), caption: [
 
 First, we can completely discard information about partial coverages and fully paint the pixel with the color if more than a specific percentage of the pixel is covered and not paint it at all in the other case. The result can be seen in @butterfly_aliased. By using this method, the resulting shape will look noticeable blocky. These artifacts are referred to as _aliasing artifacts_ @anti_aliasing_techniques and are usually undesirable. For example, when rendering text at a very low resolution, the letters might become hard to read.
 
-Because of this, it is common to render with _anti-aliasing_ enabled. When looking at @butterfly_anti_aliased, it is apparent that the edges of the butterfly are much smoother and easier to look at. This effect is achieved by "simulating" the partial coverage of pixels by applying an additional opacity to the color so that parts of the background still shine through. In @butterfly_anti_aliased, all pixels that are strictly within the shape are still painted using a fully opaque, blue color, while edge pixels appear much lighter due to the additional opacity.
+Because of this, it is common to render with _anti-aliasing_ enabled. When looking at @butterfly_anti_aliased, it is apparent that the edges of the butterfly are much smoother and easier to look at. This effect is achieved by simulating the partial coverage of pixels by applying an additional opacity to the color so that parts of the background still shine through. In @butterfly_anti_aliased, all pixels that are entirely within the shape are painted using a fully opaque, blue color, while edge pixels appear lighter due to the additional opacity.
 
-It is worth highlighting that by doing the above, we are _conflating_ two very distinct concepts: The alpha value of a color and the coverage of a pixel are not inherently related to each other, it just so happens that when rasterizing images, using color alpha to approximate pixel coverage usually works well in practice. But, this approach isn't flawless and can lead to so-called _conflation-artifacts_ @gpu_accelerated_path_rendering. The effects of this phenomenon can be observed in @conflation_figure, where we are drawing two fully opaque triangles that overlap each other. Since the green triangle completely overlaps the red one, there should be no visible red paint.
+It is worth highlighting that by doing anti-aliasing this way, we are _conflating_ two distinct concepts: The alpha value of a color and the coverage of a pixel are not inherently related to each other, but when rasterizing images, using color alpha to approximate pixel coverage usually works well in practice. However, this approach is not flawless and can lead to so-called _conflation-artifacts_ @gpu_accelerated_path_rendering. The effects of this phenomenon can be observed in @conflation_figure, where we are drawing two fully opaque triangles that overlap each other.
 
 #figure(
   block(width: 60%, grid(
@@ -271,24 +272,25 @@ It is worth highlighting that by doing the above, we are _conflating_ two very d
     image("assets/triangle_raster_red.svg", width: 100%),
     image("assets/triangle_raster_red_green.svg", width: 100%)
   )),
-  caption: [Drawing and rasterizing two completely overlapping triangles.]
+  placement: auto,
+  caption: [Drawing and rasterizing two completely overlapping triangles. The edge pixels will assume a brown color instead of a green one due to conflating pixel coverage and opacity]
 ) <conflation_figure>
 
-However, upon rasterization, something different happens: When we first draw the red triangle, we use an opacity of 50% for the pixels that are only partially covered by the shape. The same happens when drawing the second triangle in green. The crucial detail here is that since we previously _converted_ pixel coverage to color opacities for the edge pixels, we will compose a green pixel with 50% opacity on top of a red pixel with 50% opacity, resulting in a brownish color along the edges instead of a fully green one.
+Since the green triangle completely overlaps the red one, there should be no visible red paint. However, upon rasterization, the following happens: When we first draw the red triangle, we use an opacity of 50% for the pixels that are only partially covered by the shape. The same happens when drawing the second triangle in green. The crucial point here is that since we previously _converted_ pixel coverage to color opacities for the edge pixels, we will compose a green pixel with 50% opacity on top of a red pixel with 50% opacity, resulting in a brownish color along the edges instead of a fully green one.
 
 == Complex paints
 
-Up until now, we have always painted our shapes using a single color. While this is by far the most common operation, there are actually many different kinds of fills that can be used. The exact set of filling primitives that is available can vary: For example, in the case of SVG and HTML Canvas, the two main types of paint are _gradients_ and _patterns_ #cite(<svg1_spec>, supplement: [ch. 13]) #cite(<html_spec>, supplement: [ch. 4.12.5.1.10]). The PDF specification, however, defines some additional paints, including triangle meshes and Coons patch meshes #cite(<pdf_spec>, supplement: [p. 192-201]). In this section, we will narrow our focus on the two paints commonly used in web rendering. Instead of explaining the exact semantics of patterns as they are specified in the SVG specification, we will make a simplification and only talk about plain _image fills_, which can be viewed as a subset of pattern fills.
+Up until now, we have always painted our shapes using a single color. While this is the most common operation, there are many different kinds of fills that can be used. The actual set of filling primitives that is available can vary: For example, in the case of SVG and HTML Canvas, the two main types of paint are _gradients_ and _patterns_ #cite(<svg1_spec>, supplement: [ch. 13]) #cite(<html_spec>, supplement: [ch. 4.12.5.1.10]). The PDF specification, however, defines some additional paints, including triangle meshes and Coons patch meshes #cite(<pdf_spec>, supplement: [p. 192-201]). In this section, we will narrow our focus on two paints commonly used in web rendering. Gradients will be explained in @background-gradients and images, which can be seen as a subset of pattern fills, will be described in @background-images.
 
 === Gradients <background-gradients>
-Conceptually, gradients represent smooth transitions between two or multiple colors. We consider a  a parametric variable $t$ that ranges between 0.0 and 1.0 and assign a number of colors to a specific position on that range. For example, we could assign the color blue to the position 0.0, the color red to the position 0.4, the color yellow to the position 0.7 and finally the color green to the position 1.0. All of the other positions that have not been explicitly specified are calculated by doing a linear interpolation between the given stops. The result of mapping out the whole range is visualized in @gradient_line.
+Conceptually, gradients represent transitions between two or multiple colors. We consider a parametric variable $t$ that ranges between 0.0 and 1.0 and assign a number of colors to a specific position on that range. For example, we could assign the color blue to the position 0.0, the color red to the position 0.4, the color yellow to the position 0.7 and finally the color green to the position 1.0. All of the other positions that have not been explicitly specified are calculated by doing a linear interpolation between the given stops. The result of mapping out the whole range is visualized in @gradient_line.
 
 #figure(
   image("assets/gradient_rectangle.pdf", width: 80%),
   caption: [Visualization of a gradient line with the stops `(blue, 0.0)`, `(red, 0.4)`, `(yellow, 0.7)` and `(green, 1.0)`.]
 ) <gradient_line>
 
-Once we have a mapping from $t$ values to a color, we simply need to define another mapping from the $(x, y)$ position of a pixel to a $t$ value, so that we know how to color that pixel. There are three commonly used type of gradients that define this mapping in different ways: _Linear gradients_, _radial gradients_ and _sweep gradients_. Examples of applying those paint types to the shape of a butterfly can be seen in @gradients_rect.
+Once we have a mapping from $t$ values to a color, we simply need to define another mapping from the $(x, y)$ position of a pixel to a $t$ value, so that we know how to color that pixel. There are three commonly used types of gradients that define this mapping in different ways: _Linear gradients_, _radial gradients_ and _sweep gradients_. Examples of applying those paint types to a rectangle can be seen in @gradients_rect.
 
 #subpar.grid(
   figure(image("assets/rect_linear.svg"), caption: [
@@ -312,14 +314,14 @@ Once we have a mapping from $t$ values to a color, we simply need to define anot
 
 In the case of a linear gradient, we define a start and end point along which the gradient should interpolate. In the case of @rect_linear, the start point is in the top-left corner and the end point in the bottom-right corner. The visual effect will be a linear variation of the gradient line in a diagonal direction.
 
-For radial gradients, we define the position and radius of a start circle as well as an end circle. In @rect_radial, the start and end circles are both positioned in the center, while the start radius is set to 0 and the end radius to the maximum. The visual result of this gradient is a progression of the interpolated colors in a circular fashion, as if the inner circle "expanded" to the outer circle while varying the color.
+For radial gradients, we define the position and radius of a start circle as well as an end circle. In @rect_radial, the center points of both circles both coincide with the center of the rectangle, while the start radius is set to 0 and the end radius to the maximum. The visual result of this gradient is a progression of the interpolated colors in a circular fashion, as if the inner circle "expanded" to the outer circle while varying the color.
 
-Finally, sweep gradients are colored by setting a center point as well as a start and end angle. In @rect_sweep, the center point has been set in the middle, and the radii are 0#sym.degree and 360#sym.degree respectively. In the end, the colors of the gradient line will vary as the angle of the position of the pixel from the center increases.
+Finally, sweep gradients are colored by setting a center point as well as a start and end angle. In @rect_sweep, the center point has been set in the middle, and the start and end angles are 0#sym.degree and 360#sym.degree respectively. In the end, the colors of the gradient line will vary as the angle of the position of the pixel from the center increases.
 
-=== Images
-As was mentioned in @rendering_intro, it is highly desirable to represent content as vector graphics whenever possible, as it allows for arbitrary scaling without any loss of precision. However, it is clear that this is not always possible, because many objects simply cannot be represented as vector graphics, like for example images taken with a camera.
+=== Images <background-images>
+As was mentioned in @rendering_intro, it is highly desirable to represent content as vector graphics whenever possible, as it allows for arbitrary scaling without any loss of precision. However, it is clear that this is not always possible, because many objects cannot be represented as vector graphics, like for example images taken with a camera.
 
-The fundamental difficulty of rendering images in 2D graphics is that the input image might not have the same resolution as the rendered image. For instance, if an input image has a resolution of 1000x800 pixels but our output display has a resolution of 1350x1080, we need to apply a scaling factor of 1.35 to the image for it to render correctly. To do this, we need to _resample_ the image to determine what color each pixel on the display should be to accurately reproduce the original image at the higher resolution. In order to achieve this, three methods are commonly used: _Nearest-neighbor interpolation_, _bilinear interpolation_ and _bicubic interpolation_ #cite(<digital_image_processing>, supplement: [p. 87-89]). @patterns_rect contrasts the different scaling methods using the 10x10 pixels input image in @input_image scaled by a factor of 50.
+A fundamental difficulty of rendering images in 2D graphics is that the input image might not have the same resolution as the rendered image. For instance, if an input image has a resolution of 1000x800 pixels but our output display has a resolution of 1350x1080, we need to apply a scaling factor of 1.35 to the image for it to render correctly. To do this, we need to _resample_ the image to determine what color each pixel on the display should be to faithfully reproduce the original image at the higher resolution. In order to achieve this, three methods are commonly used: _Nearest-neighbor interpolation_, _bilinear interpolation_ and _bicubic interpolation_ #cite(<digital_image_processing>, supplement: [p. 87-89]). @patterns_rect contrasts the different scaling methods using the 10x10 pixels input image in @input_image scaled by a factor of 50.
 
 #subpar.grid(
   [], figure(image("assets/texture_nearest_neighbor.png", width: 30%), caption: [
@@ -340,11 +342,11 @@ figure(image("assets/rect_bilinear.svg"), caption: [
   ]),
   <rect_bicubic>,
   columns: (1fr, 1fr, 1fr),
-  caption: [The shape of a rectangle filled using a 50x scaled image using nearest-neighbor, bilinear and bicubic interpolation.],
+  caption: [The shape of a rectangle filled with an image after applying a scaling factor of 50 by using nearest-neighbor, bilinear and bicubic interpolation.],
   label: <patterns_rect>,
   placement: auto
 ) 
 
-In the case of nearest-neighbor interpolation, the algorithm is very straight-forward: It simply calculates the position of the new pixel in the old image by multiplying it with the inverse scale and samples the color value of the closest pixel. The result in @rect_nearest_neighbor shows that by using this interpolation method, the "block-like" structure of the original input image is preserved. In certain cases, this can be a desirable property (imagine for example rendering a heat map as it can be created with libraries like `matplotlib`, where you want to ensure that the individual cells retain their color), but in many cases, this interpolation method can cause artifacts and is therefore not often used #cite(<digital_image_processing>, supplement: [p. 88]). The main advantage is that it is computationally very cheap.
+In the case of nearest-neighbor interpolation, the algorithm is straight-forward: It simply calculates the position corresponding to the new pixel in the old image by multiplying it with the inverse scale and copies the color value of the closest pixel. The result in @rect_nearest_neighbor shows that by using this interpolation method, the "block-like" structure of the original input image is preserved. In certain cases, this can be a desirable property, but in many cases, this interpolation method can cause artifacts and is therefore not often used #cite(<digital_image_processing>, supplement: [p. 88]). The main advantage is that it is computationally very cheap.
 
-When performing bilinear interpolation, we do not only consider a single nearest neighbor, but actually the four nearest neighbors. We then assign a weight to each neighbor based on the exact location we are sampling and interpolate across those 4 pixels. The same applies to bicubic interpolation, with the only difference that we consider 16 neighbors instead #cite(<digital_image_processing>, supplement: [p. 88]). The results for bilinear interpolation can be observed in @rect_bilinear, where the boundaries appear much smoother due to the interpolation. At first glance, the bicubic interpolation in @rect_bicubic has a very similar effect to the bilinear interpolation in @rect_bilinear, but looking at it closer, it does become apparent that the bilinear version has some very subtle "star-like" artifacts in some places that are not present in the bicubic version. However, the cost for the slightly better quality is a much higher computational intensity per pixel.
+When performing bilinear interpolation, we do not only consider a single nearest neighbor, but actually the four nearest neighbors. We then assign a weight to each neighbor based on the  location we are sampling and perform a weighted averaging across those 4 pixels. A similar concept applies to bicubic interpolation, with the only difference that we consider 16 neighbors instead #cite(<digital_image_processing>, supplement: [p. 88]). The results for bilinear interpolation can be observed in @rect_bilinear, where the boundaries appear smoother due to the averaging process. At first glance, the bicubic interpolation in @rect_bicubic has a very similar effect to the bilinear interpolation in @rect_bilinear, but when looking at it closer, it becomes apparent that certain areas in the bilinear version appear less smooth than in the bicubic version. However, the cost for the slightly better quality is a much higher computational demand per pixel.
