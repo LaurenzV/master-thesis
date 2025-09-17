@@ -23,7 +23,6 @@ However, something that is often not appreciated is that there actually is _a lo
   columns: (1fr, 1fr),
   caption: [A comparison between a rasterized image and a vector graphic, based on a recreation of the Facebook login modal @facebook_login.],
   label: <comparison_vector_raster>,
-  placement: auto,
 )
 
 Computer displays only understand one language: the language of pixels. Computer screens are made up by a rectangular grid of small individual pixels (usually anywhere between 1000 and 4000 pixels in a single direction) that can emit varying intensities of red, green and blue at the same time. By mixing and matching those intensities in certain ways, other intermediate color such as orange, purple or white can be generated. By making each pixel emit a specific color, we can simulate different graphical effects that can then be interpreted by the user. @comparison_raster shows a Facebook login modal as it is displayed on a screen with a resolution of 180x225 pixels. When looking at this picture from afar, it is easy to discern the login modal. However, a considerable disadvantage of this pixel-based graphics model is that it is inherently lossy: Once you render the modal at a specific pixel resolution and approximate its contents by pixels, there is no way to recover the original information anymore. As a result, when trying to zoom into @comparison_raster to scale it up, instead of becoming more readable, the result will contain very noticeable pixel artifacts and become even harder to read.
@@ -88,7 +87,6 @@ Cubic Bézier curves follow the same pattern as quadratic curves, the only diffe
   columns: (1fr, 1fr, 1fr),
   caption: [Illustration of the different drawing modes.],
   label: <drawing_modes>,
-  placement: auto,
 )
 
 We now know how we can define the outline of a shape using lines and curves, but how can we actually _draw_ it? In general, we distinguish between two different types of drawing modes: _filling_ and _stroking_. @drawing_modes illustrates the difference between those. In @dragon_outline, we can see the outline of a dragon, which has been specified using the basic building blocks we just defined in @drawing_primitives
@@ -119,7 +117,6 @@ In order to do so, we first need to introduce the concept of _winding numbers_. 
 
   columns: (1fr, 1fr, 1fr),
   caption: [Illustration of the two most common fill rules.],
-  placement: auto,
   label: <fill_rules_illlustration>,
 )
 
@@ -188,7 +185,6 @@ The answer depends on the _opacity_ (also known as alpha value) of the color. In
     image("assets/rects_100.svg"),
   ),
   caption: [Painting overlapping shapes with varying opacities and a white background. From left to right: 0%, 25%, 75% and 100% opacities of the green rectangle in the foreground.],
-  placement: auto,
 ) <opacities-fig>
 
 The effect of varying the opacity can be observed @opacities-fig, where a green rectangle with varying opacities is drawn on top of a fully opaque red rectangle. In case the opacity is 0%, the green rectangle cannot be seen at all. In the case of 100%, the area of the green rectangle is painted completely in green. In all other cases, the background still shines through to a certain degree, depending on how high the transparency is. As a result, the overlapping area of the two rectangles takes on a color that is somewhere "in-between" red and green.
@@ -208,7 +204,6 @@ While the above-described behavior is the most commonly expected one, there actu
 #figure(
   image("assets/compose.pdf", width: 80%),
   caption: [The effect of compositing two layers with the composition operators presented in @compositing-digital-images. Illustration adapted from @w3c2015compositing.],
-  placement: auto
 ) <composition-mode-fig>
 
 The source-over composition operator is by far the most commonly used one and intuitively equivalent to placing the new shape _on top_ of the existing one, as was done in @opacities-fig. This is in contrast to the destination-over composition mode, where the new shape is instead drawn _below_ the existing background. Another interesting combination is the _Xor_ mode, where only the non-overlapping parts of the source and background are visible and all other parts are cleared. By combining the algebraic building blocks introduced in that paper in different ways, nine other composition modes can be derived, though some arguably are less useful in practice and simply a result of exhaustively enumerating all possibilities.
@@ -221,7 +216,6 @@ Blending is closely related to compositing, in the sense that it allows changing
 #figure(
   image("assets/blend.pdf", width: 80%),
   caption: [The effect of blending two layers with different blend modes. Illustration inspired by a similar figure in @w3c2015compositing.],
-  placement: auto
 ) <blend-mode-fig>
 
 There are two additional points worth mentioning regarding blending and compositing. 
@@ -251,7 +245,6 @@ figure(image("assets/butterfly_outlined_zoomed.pdf", width: 60%), caption: [
 ),
   columns: (1fr),
   caption: [A butterfly rasterized to a 20x20 screen with and without anti-aliasing.],
-  placement: auto,
 ) <butterfly_rasterization>
 
 First, we can completely discard information about partial coverages and fully paint the pixel with the color if more than a specific percentage of the pixel is covered and not paint it at all in the other case. The result can be seen in @butterfly_aliased. By using this method, the resulting shape will look noticeable blocky. These artifacts are referred to as _aliasing artifacts_ @anti_aliasing_techniques and are usually undesirable. For example, when rendering text at a very low resolution, the letters might become hard to read.
@@ -272,7 +265,6 @@ It is worth highlighting that by doing anti-aliasing this way, we are _conflatin
     image("assets/triangle_raster_red.svg", width: 100%),
     image("assets/triangle_raster_red_green.svg", width: 100%)
   )),
-  placement: auto,
   caption: [Drawing and rasterizing two completely overlapping triangles. The edge pixels will assume a brown color instead of a green one due to conflating pixel coverage and opacity]
 ) <conflation_figure>
 
@@ -344,7 +336,6 @@ figure(image("assets/rect_bilinear.svg"), caption: [
   columns: (1fr, 1fr, 1fr),
   caption: [The shape of a rectangle filled with an image after applying a scaling factor of 50 by using nearest-neighbor, bilinear and bicubic interpolation.],
   label: <patterns_rect>,
-  placement: auto
 ) 
 
 In the case of nearest-neighbor interpolation, the algorithm is straight-forward: It simply calculates the position corresponding to the new pixel in the old image by multiplying it with the inverse scale and copies the color value of the closest pixel. The result in @rect_nearest_neighbor shows that by using this interpolation method, the "block-like" structure of the original input image is preserved. In certain cases, this can be a desirable property, but in many cases, this interpolation method can cause artifacts and is therefore not often used #cite(<digital_image_processing>, supplement: [p. 88]). The main advantage is that it is computationally very cheap.

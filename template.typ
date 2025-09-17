@@ -142,6 +142,8 @@
   #set page(numbering: "1")
   #counter(page).update(1)
 
+  #set figure(placement: auto)
+
   #doc
 
   #set heading(numbering: none)

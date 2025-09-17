@@ -14,7 +14,6 @@ In this section, we will first showcase an example code snippet to demonstrate h
       #raw(lang: "rust", read("assets/api_code.rs"))
     ],
     caption: [Example usage of Vello CPU's API.],
-    placement: auto
   ) <api_example_Listing>
 
 In the beginning, the user can specify settings that should be applied while rendering. The `level` property indicates which SIMD level should be used during rendering. By default, Vello CPU will dynamically detect the highest available level on the host system, but the user can override this to, for example, force using SSE4.2 instructions, even though the system supports AVX2. The `num_threads` property allows to enable multi-threaded execution (see @multi-threading) or enforce single-threaded execution by setting the value to 0. Finally, the `render_mode` property indicates whether to prioritize speed or quality during rasterization by using `u8` or `f32` numbers, respectively (see @fine_rasterization).
@@ -30,7 +29,6 @@ By calling the `render_to_pixmap` method, we now instruct Vello CPU to render th
 #figure(
   image("assets/api_code_result.png", width: 50%, scaling: "pixelated"),
   caption: [The rendered result of the code in @api_example_Listing.],
-  placement: auto
 ) <api_example_result>
 
 
@@ -42,7 +40,6 @@ An interesting aspect of the design of Vello CPU is that it has a highly modular
 #figure(
   image("assets/overview_pipeline.pdf"),
   caption: [An overview of the rendering pipeline in Vello CPU.],
-  placement: auto,
 ) <overview_pipeline>
 
 The pipeline is illustrated in @overview_pipeline. Overall, the steps can be grouped into three categories: _Path rendering_, _coarse rasterization_ and _rasterization_. 
@@ -78,7 +75,6 @@ In @fills-and-strokes, we mentioned that there are two types of drawing mode tha
   columns: (1fr, 1fr, 1fr),
   caption: [Reducing the problem of stroking a shape to the problem of filling its expanded version.],
   label: <stroke-expansion-fig>,
-  placement: auto,
 )
 
 The main advantage of the stroke expansion approach is that it allows us to treat filled and stroked paths in the exact same way throughout the whole rendering pipeline, allowing for further simplification. The only difference is that stroked paths go through an additional step in the beginning of the pipeline.
@@ -92,7 +88,7 @@ Now that we have an expanded version of our stroke or a shape the user wants to 
 
 #figure(
   image("assets/butterfly_flattened.pdf"),
-  caption: [Parts of the butterfly shape flattened to lines. The first and third figure represent the original path segments, the second and fourth figure their respective flattened version. The red points indicate the start/end points of the line segments.]
+  caption: [Parts of the butterfly shape flattened to lines. The first and third figures represent the original path segments, the second and fourth figures their respective flattened version. The red points indicate the start/end points of the line segments.]
 ) <butterfly-flattened-fig>
 
 However, line segments usually cannot accurately model curve segments. This can also be seen in @butterfly-flattened-fig. While the flattened versions of the shape _overall_ still look curvy, zooming in makes it apparent that it is approximated by a number of connected lines. For plain vector graphics, doing such a simplification would clearly be unacceptable. The crucial point here is that the simplification will be barely noticeable once the shape is rendered to pixels, because as part of the discretization process, the information whether a line or curve was used is lost; all that is left is an approximation of pixel coverage in the form of color opacity. And assuming that the number of used line segments is sufficiently large, the change in pixel coverage will be so small that it is unnoticeable to the naked eye.
@@ -187,7 +183,6 @@ We run this computation for all rows containing strips to assign each strip its 
 #figure(
 image("assets/butterfly_strip_areas_with_winding.svg",width: 35%),
     caption: [The areas of the generated strips, with the strips painted according to their winding number.],
-    placement: auto
   ) <butterfly-strip-areas-with-winding>
 
 === Calculating pixel-level winding number
@@ -196,7 +191,6 @@ We know have encoded the information necessary to determine fully-painted areas 
 #figure(
 image("assets/strip_winding_numbers.pdf", width: 85%),
     caption: [Calculating winding numbers of each pixel in a strip.],
-    placement: auto
   ) <strip-winding-numbers>
 
 For each strip, we once again look at its constituent tile regions. We initialize a temporary array of 16 floating point numbers to the coarse winding number of the strip and store it in *column-major* (the reasoning behind this will be elaborated in @fine_rasterization) order. We then iterate over all tiles in the given tile region and compute the trapezoidal area that is spanned between the line and the right edge of the tile. For each pixel, we then simply calculate the fraction of its area that is covered by the trapezoid. Note that the usual rules apply, where the area can also be _negative_ depending on the direction the line intersects the pixels with. We then sum the fractional windings of all tiles in the same region into our temporary array, until we end up with the final winding number for each pixel. Next, we convert the winding numbers into opacities between 0.0 and 1.0 by applying the fill rule and scale them by 255 so that we can store them as `u8`. The array of the 16 opacity values is then pushed out into a buffer and the whole process is restarted for the next tile area in the strip, using the winding numbers for the right-most column as the basis. Doing this for all strips and visualizing the calculated opacities, we end up with the representation that is shown in @butterfly-all-strips.
@@ -204,7 +198,6 @@ For each strip, we once again look at its constituent tile regions. We initializ
 #figure(
   image("assets/butterfly_all_strips.svg", width: 35%),
   caption: [The opacity values for all strips. Completely black pixels represent 100% opacity, white pixels 0%, shades of grey intermediate values.],
-  placement: auto,
 ) <butterfly-all-strips>
 
 Thinking about this more carefully, it should now be clear that we have all the information needed to fully draw the complete shape. We have calculated the opacity values of all anti-aliased pixels and represent to-be-filled areas in an implicit way, just by storing a `Vec<Strip>` that represents the whole rasterized geometry of a single shape. As can be seen in @strip-fields, a strip only needs to store its start x and y positions, its _coarse_ winding number as well as an index into the global alpha buffer containing the opacities of each pixel in each strip. Note in particular that there is no need to explicitly store the width of the strip, as it can be inferred by looking at the `alpha_idx` of the next strip. For example, if one strip has an alpha index of 80 and the next strip an index of 160, the width of the strip is $(160 - 80) / 4 = 20$ pixels, since a strip always has a height of 4.
@@ -243,7 +236,6 @@ Initially, it was claimed that the point of strip rendering is to only calculate
   )
   ],
   caption: [The butterfly processed with tile sizes 1, 2, 4 and 8.],
-  placement: auto
 ) <butterfly-tile-sizes>
 
 In principle, it is very much possible to use different tile sizes, as is shown in @butterfly-tile-sizes. However, both increasing and decreasing the tile sizes come with their own caveats. In the case of 8x8 pixels, we overall have less tiles which means lower overhead when generating and sorting them. However, the disadvantage is that our tiles cover _many more_ non-anti-aliased pixels, implying higher memory requirements and also many more pixel-level anti-aliasing computations that need to be performed which are expensive. Using tile sizes of 1 and 2 on the other hand _reduce_ the number of performed anti-aliasing computations, but the downside is that the bottleneck will instead shift toward tile generation and sorting, as we will need to generate many more tiles. A tile size of 4 is a good balance; the tiles are not too large and we therefore do not need to perform too many unnecessary anti-aliasing computations and reduce the sparseness of the representation, but also not too small, resulting in reasonable performance during tile generation and sorting. In addition to that, as will be demonstrated in @simd, a tile size of 4 hits the sweet spot for efficient SIMD optimizations.
@@ -288,7 +280,6 @@ We now simply iterate over the sparse strips representation of our path to gener
 #figure(
   image("assets/wide_tile_commands.pdf"),
   caption: [Generating wide tile commands for a row of strips. Yellow rectangles represent the strips, red ones the implicitly to-be-filled areas. The `paint`, `blend_mode` and `compose` fields have been omitted for brevity.],
-  placement: auto
 ) <wide-tile-gen>
 
 For strips, we more or less just need to copy the `x` and `alpha_idx` properties of the corresponding strip and calculate the implicitly represented width to generate a new alpha fill command. For the gaps between strips, we proceed as previously outlined: In case the right strip has a coarse winding number that requires filling, we generate a corresponding fill command, as is the case for the gap between strip 1 and 2 as well as strip 3 and 4. Otherwise, we simply leave the area untouched, like for example the gap between strip 2 and 3. 
@@ -319,7 +310,6 @@ In @patterns_rect, we illustrated the concept of image paints based on a 10x10 i
   columns: (1fr, 1fr, 1fr),
   caption: [The different image sample strategies. The black dot represents the original location, the red dots the sampled locations],
   label: <sampling-fig>,
-  placement: auto,
 )
 
 The story is a bit different when using bilinear filtering instead. In this case, we instead sample the color values of the four _surrounding_ locations (like in @sampling-bil-fig) and perform a linear interpolation of those samples by weighting them based on our exact fractional location within the pixel. The resulting color will then neither be a a clean orange or yellow, but instead some intermediate color. Doing this for all pixels achieves the effect of smoothing the edges between pixels with varying colors, as was previously shown in @patterns_rect. Bicubic filtering operates on a similar basis, but instead samples the surrounding 16 pixels and then uses a cubic filter for weighting the contributions of each sample based on proximity. The result will be an even smoother blending between pixel edges, at the cost of a higher computational cost.
@@ -330,7 +320,6 @@ As was mentioned in @background-gradients, gradients allow us to represent smoot
 #figure(
   image("assets/gradient_t_vals.pdf", width: 80%),
   caption: [Determining the $t$-value of a pixel for each gradient type.],
-  placement: auto
 ) <gradient-t-vals>
 
 Linear gradients are defined by a start and end point that define the line used as the basis for the color gradient, as was previously shown in @rect_linear. In order to calculate the parametric `t` value for any arbitrary pixel position, we just need to calculate the intersection of the _perpendicular_ line that passes through the pixel position. If the intersection point lies exactly at the start point, the value of $t$ will be zero. If it instead lies at the end point, the value will be one. Otherwise, for any position in-between the value will be some fractional value between zero and one, as seen in @gradient-t-vals.
@@ -384,7 +373,6 @@ After completing fine rasterization, the scratch buffer of each wide tile stores
 #figure(
   image("assets/packing.pdf"),
   caption: [The packing process visualized based on a 16x16 pixmap and wide tiles of size 8x4 (for easier illustration). As indicated by the arrows, when copying the pixels into the pixmap, we need to transpose from column-major to row-major order.],
-  placement: auto,
 ) <packing-fig>
 
 To address these points, there is a final stage called _packing_. As part of this, we iterate over all wide tiles and copy each pixel in their buffer to the appropriate location in the user-supplied `Pixmap`. Pixels whose position lie outside of the pixmap are simply ignored and not copied. In case the values are stored as f32, we multiply the values by 255 and then round them to the appropriate `u8` values. Once this done, all pixels are stored in the pixmap as premultiplied RGBA values and the user can process them further, for example by encoding the image into a PNG file and storing it on disk.
@@ -415,7 +403,6 @@ trait Simd {
 }
   ```,
   caption: [A selection of functions defined by the `Simd` trait.],
-  placement: auto
 ) <simd-trait>
 
 The different available SIMD levels are then represented as zero-sized types that implement the functions for the given architecture. In order to prevent the user from arbitrarily creating levels on platforms that do not support it, the types contain an empty private field so that they can only be constructed from within the crate, were an instance of the struct will only be returned at runtime if the current system supports the given capabilities.
@@ -453,7 +440,6 @@ impl Simd for Neon {
 }
   ```,
   caption: [Example implementations of the SIMD trait for `Fallback` and `Neon`.],
-  placement: auto
 ) <simd-trait-impl>
 
 Using these capabilities, we can define the main functions in Vello CPU to be generic over the `Simd` trait which allows us to implement them in a platform-agnostic way while still leveraging SIMD capabilities.
@@ -475,7 +461,6 @@ One core motivation for exploring the sparse strips approach was that we believe
 #figure(
   image("assets/multi_threading_architecture.pdf", width: 90%),
   caption: [An overview of the architecture for multi-threaded rendering.],
-  placement: auto
 ) <multi-threading-architecture>
 
 Everything starts with the creation of the `RenderContext` (see @api), where the user can set the number of threads that should be used for rendering. In case it is set to 0, no multi-threading will be activated and the code path for single-threaded rendering will be used. Otherwise, the `RenderContext` will spawn a thread pool containing `num_threads` threads, meaning that including the main thread, there will be `num_threads + 1` active threads. In order to manage the thread pool we use rayon#footnote[https://github.com/rayon-rs/rayon (accessed on 11.09.2025)], a Rust library for data parallelism. 

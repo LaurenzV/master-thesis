@@ -69,7 +69,7 @@ The main idea behind the benchmark harness is to the renderer feed various input
     entry("128x128", "rect_128"),
     entry("256x256", "rect_256"),
  ))
-], caption: [The four different configurable parameters of the benchmarking harness.], placement: auto) <bench-types>
+], caption: [The four different configurable parameters of the benchmarking harness.]) <bench-types>
 ] 
 
 The first knob is the _draw mode_, which should be relatively self-explanatory. Choosing *fill* will help us measure the performance of filling shapes, while choosing *stroke* instead will tell us how performant stroking (in particular stroke expansion) is.
@@ -112,7 +112,6 @@ We begin the analysis by looking at single-threaded rendering and considering th
 
 #figure(
   image("assets/st_fill_Solid_RectA.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Solid - RectA".]
 ) <solid-fill-recta>
 
@@ -126,7 +125,6 @@ Another reason that Vello CPU does do slightly worse in this particular case is 
 
 #figure(
   image("assets/st_fill_Solid_RectU.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Solid - RectU".]
 ) <solid-fill-rectu>
 
@@ -134,7 +132,6 @@ Next, we want to analyze the performance of general edge rasterization by consid
 
 #figure(
   image("assets/st_fill_Solid_PolyNZi40.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Solid - PolyNZi40".]
 ) <solid-fill-polynz40>
 
@@ -142,7 +139,6 @@ Let us shift our focus to @solid-fill-fish next, where we can see one of the are
 
 #figure(
   image("assets/st_fill_Solid_Fish.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Solid - Fish".]
 ) <solid-fill-fish>
 
@@ -152,7 +148,6 @@ There does not seem to be a particularly easy solution to the problem. One appro
 
 #figure(
   image("assets/st_fill_Solid_World.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Solid - World".]
 ) <solid-fill-world>
 
@@ -161,7 +156,6 @@ Let us devote our attention to stroking next. There are two cases that worth exp
 
 #figure(
   image("assets/st_stroke_Solid_World.pdf"),
-  placement: auto,
   caption: [The running times for the test "Stroke - Solid - World".]
 ) <solid-stroke-world>
 
@@ -169,7 +163,6 @@ In @solid-stroke-butterfly, we can observe the running times when stroking a cur
 
 #figure(
 image("assets/st_stroke_Solid_Butterfly.pdf"),
-  placement: auto,
   caption: [The running times for the test "Stroke - Solid - Butterfly".]
 ) <solid-stroke-butterfly>
 
@@ -180,13 +173,11 @@ Finally, let us analyze the performance of Vello CPU when complex paints such as
 
 #figure(
 image("assets/st_fill_Linear_RectA.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Linear - RectA".]
 ) <linear-fill-recta>
 
 #figure(
 image("assets/st_fill_Pattern_NN_RectA.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Pattern_NN - RectA".]
 ) <pattern-fill-recta>
 
@@ -199,7 +190,6 @@ Next, we want to more closely analyze Vello CPU's multi-threaded rendering perfo
 
 #figure(
 image("assets/mt_fill_Solid_RectA.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Solid - RectA".]
 ) <mt-solid-fill-recta>
 
@@ -207,7 +197,6 @@ We begin our analysis by once again considering the simplest case of drawing sim
 
 #figure(
 image("assets/mt_fill_Solid_PolyNZi40.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Solid - PoltNZi40".]
 ) <mt-solid-fill-polynz40>
 
@@ -217,7 +206,6 @@ Once we throw curve segments or strokes into the mix, the path processing time i
 
 #figure(
 image("assets/mt_fill_Solid_Fish.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Solid - Fish".]
 ) <mt-solid-fill-fish>
 
@@ -225,7 +213,6 @@ Finally, remember that the second component that can be parallelized in the pipe
 
 #figure(
 image("assets/mt_fill_Linear_RectA.pdf"),
-  placement: auto,
   caption: [The running times for the test "Fill - Linear - RectA".]
 ) <mt-linear-fill-recta>
 
