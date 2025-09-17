@@ -181,7 +181,7 @@ caption: [Calculating the coarse winding number for each strip in a row.]
 We run this computation for all rows containing strips to assign each strip its coarse winding number. To more easily visualize this, we can now color the strips according to the fill rule (in our case the non-zero fill rule): If the coarse winding number of a strip is zero, we color it in green, otherwise we color it in red. The result is illustrated in @butterfly-strip-areas-with-winding. Note in particular that just encoding the winding number in each strip is enough information to later on infer which non-covered areas should be fully painted and which ones should not! For every non-covered gap, if the strip on the _right_ side has a non-zero winding number (i.e. is red in the figure), the whole area is painted, otherwise it is not painted. For example, the gap in the first row in @butterfly-strip-areas-with-winding will not be painted since the strip on the very right has a winding number of 0. However, in the third row, both areas will be painted since the strips on the right of each gap have a non-zero winding number. Mentally applying this idea to each row, it becomes evident that this approach is sufficient to later on determine which areas need to be painted, solely based on the encoded information in the sparse strips.
 
 #figure(
-image("assets/butterfly_strip_areas_with_winding.svg",width: 35%),
+image("assets/butterfly_strip_areas_with_winding.svg",width: 50%),
     caption: [The areas of the generated strips, with the strips painted according to their winding number.],
   ) <butterfly-strip-areas-with-winding>
 
@@ -200,7 +200,7 @@ For each strip, we once again look at its constituent tile regions. We initializ
   caption: [The opacity values for all strips. Completely black pixels represent 100% opacity, white pixels 0%, shades of grey intermediate values.],
 ) <butterfly-all-strips>
 
-Thinking about this more carefully, it should now be clear that we have all the information needed to fully draw the complete shape. We have calculated the opacity values of all anti-aliased pixels and represent to-be-filled areas in an implicit way, just by storing a `Vec<Strip>` that represents the whole rasterized geometry of a single shape. As can be seen in @strip-fields, a strip only needs to store its start x and y positions, its _coarse_ winding number as well as an index into the global alpha buffer containing the opacities of each pixel in each strip. Note in particular that there is no need to explicitly store the width of the strip, as it can be inferred by looking at the `alpha_idx` of the next strip. For example, if one strip has an alpha index of 80 and the next strip an index of 160, the width of the strip is $(160 - 80) / 4 = 20$ pixels, since a strip always has a height of 4.
+Thinking about this more carefully, it should now be clear that we have all the information needed to fully draw the complete shape. We have calculated the opacity values of all anti-aliased pixels and represent to-be-filled areas in an implicit way, just by storing a `Vec<Strip>` that represents the whole rasterized geometry of a single shape. As can be seen in @strip-fields, a strip only needs to store its start x and y positions, whether the area to its left should be filled depending on the winding number and active fill rule as well as an index into the global alpha buffer containing the opacities of each pixel in each strip. Note in particular that there is no need to explicitly store the width of the strip, as it can be inferred by looking at the `alpha_idx` of the next strip. For example, if one strip has an alpha index of 80 and the next strip an index of 160, the width of the strip is $(160 - 80) / 4 = 20$ pixels, since a strip always has a height of 4.
 
 #figure(
   [
@@ -209,7 +209,7 @@ struct Strip {
     x: u16,
     y: u16,
     alpha_idx: u32,
-    winding: i32,
+    fill_gap: bool,
 }
     ```
   ],
