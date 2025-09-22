@@ -113,7 +113,7 @@ Then, we iterate over all lines in our input geometry and generate _one_ tile fo
 
 #figure(
   image("assets/tile_line_example.svg", width: 60%),
-  caption: [Generating tiles for a line.]
+  caption: [Generating tiles for a line. Yellow points represent the locations where the line interesects the top of a tile.]
 ) <generating-tiles>
 
 #figure(

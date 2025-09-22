@@ -9,6 +9,6 @@ It needs to be noted that the project of building Vello CPU is part of a bigger 
   - support for all blend modes and compositing operators.
 - Extending fearless_simd with the necessary operators to support NEON and SSE4.2 in Vello CPU.
 - Rewriting the flattening, strip generation, fine rasterization and packing stages to be fully SIMD-compatible.
-- Performance tweaks in various stages of the pipeline that have been identified as bottlenecks through profiling.
+- Applying performance tweaks in various stages of the pipeline that have been identified as bottlenecks through profiling.
 - Designing and then implementing support for multi-threading in the path rendering and rasterization stages.
-- Running the performance evaluation using the Blend2D benchmark suite.
+- Running the performance evaluation using the Blend2D benchmark suite and interpreting the results.
