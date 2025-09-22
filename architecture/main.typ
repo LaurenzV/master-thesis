@@ -378,7 +378,12 @@ After completing fine rasterization, the scratch buffer of each wide tile stores
   caption: [The packing process visualized based on a 16x16 pixmap and wide tiles of size 8x4 (for easier illustration). As indicated by the arrows, when copying the pixels into the pixmap, we need to transpose from column-major to row-major order.],
 ) <packing-fig>
 
-To address these points, there is a final stage called _packing_. As part of this, we iterate over all wide tiles and copy each pixel in the wide tile buffer to the appropriate location in the user-supplied `Pixmap`. Pixels whose position lie outside of the pixmap are simply ignored and not copied. In case the values are stored as f32, we multiply the values by 255 and then round them to the appropriate `u8` values. Once this done, all pixels are stored in the pixmap as premultiplied RGBA values and the user can process them further, for example by encoding the image into a PNG file and storing it on disk.
+To address these points, there is a final stage called _packing_. As part of this, we iterate over all wide tiles and copy each pixel in the wide tile buffer to the appropriate location in the user-supplied `Pixmap`. Pixels whose position lie outside of the pixmap are simply ignored and not copied. In case the values are stored as f32, we multiply the values by 255 and then round them to the appropriate `u8` values. Once this done, all pixels are stored in the pixmap as premultiplied RGBA values and the user can process them further, for example by encoding the image into a PNG file and storing it on disk. The final rasterized version of our butterfly can be seen in @rasterized-butterfly.
+
+#figure(
+  image("assets/butterfly_rasterized.svg", width: 30%),
+  caption: [The final rasterized version of the butterfly.],
+) <rasterized-butterfly>
 
 == SIMD <simd>
 In order to achieve the best performance, implementing SIMD optimizations is indispensable. In many cases, it can be sufficient to rely on auto-vectorization for that purpose, but in our case, this is unsatisfactory for two reasons: Firstly, while the compiler often does a good job at detecting auto-vectorization opportunities, it does not do so 100% reliably and making the intended vectorizations explicit by using SIMD intrinsics is therefore more desirable. Secondly, since the Rust compiler by default needs to produce portable code, it can often only rely on a very reduced set of SIMD intrinsics. For example, in order to instruct the compiler to make use of AVX2 feature, it is necessary to explicitly enable the `avx2` target feature, as a result of which the compiled code cannot be run on x86 devices that do not support these instructions.
