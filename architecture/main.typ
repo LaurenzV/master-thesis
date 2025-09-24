@@ -183,7 +183,7 @@ image("assets/butterfly_strip_areas_with_winding.svg",width: 50%),
     caption: [The areas of the generated strips, with the strips painted according to their winding number. Green areas indicate that gaps on the left should not be painted according to the fill rule, while red areas indicate that gaps on the left should be filled.],
   ) <butterfly-strip-areas-with-winding>
 
-=== Calculating pixel-level winding numbers
+=== Calculating pixel-level winding numbers <pixel-level-winding>
 We now have encoded the information necessary to determine fully-painted areas in later stages of the pipeline, but we have yet to determine the opacity values of the pixels _inside_ of strips to apply anti-aliasing. In principle, we use a very similar "ray-shooting" approach that we used to determine the strip-level winding number, with the main difference being that we are now considering rays intersecting individual _pixel rows_ (instead of strip rows) and also considering _fractional_ winding numbers. The process is visualized in @strip-winding-numbers on the basis of the first strip in the first row.
 
 #figure(
