@@ -119,7 +119,7 @@ First, it is apparent that Blend2D is the clear winner in this specific benchmar
 
 Secondly, another trend that will become more apparent soon is that Vello CPU seems to have a general weakness for small shape sizes, but apart from Blend2D it is the only other renderer that shows excellent scaling behavior as the shape size increases. For 8x8 and 16x16, AGG and JUCE are faster in this specific benchmark, but that difference is reversed when considering 128x128 and 256x256. 
 
-We believe this behavior can easily be explained by considering how sparse strips work. Since the minimum tile size is 4x4, in case we are drawing small geometries there is a high chance that the whole geometry will be represented purely by strips instead of sparse fill regions, which are more expensive to process. In addition to that, the fixed tile size has the consequence that many pixels that are actually not covered by the shape are still included and incur costs during anti-aliasing calculations and rasterization, which can represent a significant overhead given the small size of the shape. On the other hand, thanks to sparse strips, the larger the geometry the more likely it is that it can be represented by large sparse fill regions, which are comparatively cheaper to process. Other renderers do not necessarily make use of such an implicit representation and therefore exhibit worse scaling behavior.
+We believe this behavior can easily be explained by considering how sparse strips work. Since the minimum tile size is 4x4, in case we are drawing small geometries there is a high chance that the whole geometry will be represented exclusively by strips instead of sparse fill regions, which are more expensive to process. In addition to that, the fixed tile size has the consequence that many pixels that are actually not covered by the shape are still included and incur costs during anti-aliasing calculations and rasterization, which can represent a significant overhead given the small size of the shape. On the other hand, thanks to sparse strips, the larger the geometry, the more likely it is that it can be represented by large sparse fill regions, which are comparatively cheap to process. Other renderers do not necessarily make use of such an implicit representation and therefore exhibit worse scaling behavior.
 
 Another reason that Vello CPU performs slightly worse in this particular case is that we decided to not include a special-case path for pixel-aligned rectangles, which becomes apparent when contrasting the results to @solid-fill-rectu, where unaligned rectangles are drawn. In that figure, the results for Vello CPU more or less stay the same, while for example JUCE and AGG show worse performance. Overall, it still seems safe to draw the conclusion that Vello CPU lands a second place for those two configurations.
 
@@ -135,21 +135,26 @@ Next, we want to analyze the performance of general edge rasterization by consid
   caption: [The running times for the test "Fill - Solid - PolyNZi40".]
 ) <solid-fill-polynz40>
 
-Let us shift our focus to @solid-fill-fish next, which forms the main exception to our previous statement that Vello CPU performs relatively worse for small shapes and actually ends up beating Blend2D for certain sizes. The reason that Vello CPU performs so well here is that we implemented a clever optimization during curve flattening which seemingly has not been embraced by other renderers: Before performing curve flattening, we first consider the start and end points as well as control points of the curve. In case the points are so close together that the curve cannot possibly exceed the flattening threshold (in our case 0.25), we simply approximate it by a single line segment instead of running the much more computationally intensive flattening algorithm. As can be seen in the figure, having this shortcut path leads to impressive gains if the shape consists of many small curve segments.
+Let us shift our focus to @solid-fill-fish next, which forms the main exception to our previous statement that Vello CPU has a weakness for small shapes and actually ends up beating Blend2D for certain sizes. The reason that Vello CPU performs so well here is that we implemented a clever optimization during curve flattening which seemingly has not been embraced by other renderers: Before performing curve flattening, we first consider the start and end points as well as control points of the curve. In case the points are so close together that the curve cannot possibly exceed the flattening threshold (in our case 0.25), we simply approximate it by a single line segment instead of running the much more computationally intensive flattening algorithm (which will most likely only yield a single line segment, anyway). As can be seen in the figure, having this shortcut path leads to impressive gains if the shape consists of many small curve segments.
 
 #figure(
   image("assets/st_fill_Solid_Fish.pdf"),
   caption: [The running times for the test "Fill - Solid - Fish".]
 ) <solid-fill-fish>
 
-Let us consider @solid-fill-world, where the weakness for smaller geometry sizes becomes more apparent: At the smallest size, Vello CPU is more than twice as slow as Skia and raqote, with the inflection point only arriving at the size 64x64, at which point Vello CPU once again exhibits much better scaling behavior. When looking at the performance profile, over 90% of the time is spent in the path rasterization stage in the tile generation, sorting as well as strip generation stage. Thinking about this in more detail, the possible problem becomes apparent. The "World" test case consists of a shape with a very large amount of lines. Even when the shape is scaled down to 8x8, we still end up generating a 4x4 tile for each single line and computing the winding numbers for all 16 pixels, even though only a small part is really covered. The problem could be slightly ameliorated by relaxing the restriction on the width of strips (see @conclusion), but this will still not reduce the number of generated tiles that need to be sorted, which takes up a significant chunk of the time. 
-
-There does not seem to be a straightforward solution to the problem. One approach could be introducing a kind of "line-merging" stage where multiple small lines are merged into larger ones at the cost of some precision, but this seems to be a rather complicated optimization. Otherwise, it might also be worth investigating faster sorting algorithms specialized for a large number of tiles, but the potential for gains here does not seem that significant either.
+Let us consider @solid-fill-world, where the weakness for smaller geometry sizes becomes more apparent: At the smallest size, Vello CPU is more than twice as slow as Skia and raqote, with the inflection point only arriving at the size 64x64, at which point Vello CPU once again exhibits much better scaling behavior. When looking at the performance profile for the 8x8 case in @solid-fill-world-profile, over 85% of the time is spent in the path rasterization stage during tile generation, sorting as well as strip generation. Thinking about this in more detail, the possible problem becomes apparent. The "World" test case consists of a shape with a very large amount of lines. Even when the shape is scaled down to 8x8, we still end up generating a 4x4 tile for each single line and computing the winding numbers for all 16 pixels, even though only a small part is really covered. The problem could be slightly ameliorated by relaxing the restriction on the width of strips (see @conclusion), but this will still not reduce the number of generated tiles that need to be sorted, which takes up a significant chunk of the time. 
 
 #figure(
   image("assets/st_fill_Solid_World.pdf"),
-  caption: [The running times for the test "Fill - Solid - World".]
+  caption: [The running times for the test "Fill - Solid - World". ]
 ) <solid-fill-world>
+
+#figure(
+  image("assets/profile_fill_world_8x8.pdf", width: 60%),
+  caption: [The percentage of the total runtime each step in the pipeline takes for the test case "Fill - Solid - World" with shape size 8x8. Note that the shape does not contain any curve segments. Therefore the "flattening" part mostly represents the overhead from iterating over all lines and re-emitting them.]
+) <solid-fill-world-profile>
+
+There does not seem to be a straightforward solution to the problem. One approach could be introducing a kind of "line-merging" stage where multiple small lines are merged into larger ones at the cost of some precision, but this seems to be a rather complicated optimization. Otherwise, it might also be worth investigating faster sorting algorithms specialized for a large number of tiles, but the potential for gains here does not seem that significant either.
 
 === Stroking
 Let us devote our attention to stroking next. There are two cases that are worth exploring: Stroking of straight lines and stroking of curves. For lines, we can consider the "World" shape again as it is depicted in @solid-stroke-world. As can be seen, Blend2D once again by far leads the score, but is followed second by Vello CPU, which (together with JUCE) leads with another significant gap compared to the remaining renderers. There is also an interesting behavior where different renderers react differently to different sizes: Raqote seems to deal worse with small shapes but better with larger ones, while for other renderers the sweet spot is somewhere in the middle. Determining the exact reason for these discrepancies appears difficult, but the observation highlights the fact that different renderers use different algorithms for stroking.
@@ -159,12 +164,17 @@ Let us devote our attention to stroking next. There are two cases that are worth
   caption: [The running times for the test "Stroke - Solid - World".]
 ) <solid-stroke-world>
 
-In @solid-stroke-butterfly, we can see the running times when stroking a curved shape instead. We once again observe that in this particular case, Vello CPU does not perform as well as other renderers for small shape sizes, but makes up for the differences as the dimensions of the shape increase. In this case, we do not attribute the sluggish performance to the fixed size of 4x4 for a tile. A look at the profile reveals that more than 70% of the time is spent in stroke expansion, leading us to the conclusion that there seems to be some inefficiency in the current algorithm. The exact reason for this issue remains to be determined, however.
+In @solid-stroke-butterfly, we can see the running times when stroking a curved shape instead. We once again observe that in this particular case, Vello CPU does not perform as well as other renderers for small shape sizes, but makes up for the differences as the dimensions of the shape increase. In this case, we do not attribute the sluggish performance for small shape sizes to the fixed size of 4x4 for a tile. A look at the profile in @solid-stroke-butterfly-profile reveals that more than 70% of the time is spent in stroke expansion, leading us to the conclusion that there seems to be some inefficiency in the current algorithm. The exact reason for this issue remains to be determined, however.
 
 #figure(
 image("assets/st_stroke_Solid_Butterfly.pdf"),
   caption: [The running times for the test "Stroke - Solid - Butterfly".]
 ) <solid-stroke-butterfly>
+
+#figure(
+  image("assets/profile_stroke_butterfly_8x8.pdf", width: 60%),
+  caption: [The percentage of the total runtime each step in the pipeline takes for the test case "Stroke - Solid - Butterfly" with shape size 8x8. Stroke expansion represents the main bottleneck.]
+) <solid-stroke-butterfly-profile>
 
 Overall, we draw the conclusion that while there is more work left to be done on the stroking side of things, performance is at least comparable to other renderers and stands out when considering larger shape sizes.
 
