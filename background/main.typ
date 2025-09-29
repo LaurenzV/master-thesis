@@ -41,7 +41,7 @@ Nevertheless, in general, there are three path-building primitives that are comm
 Each type of primitive has a start point $P_0$ and an end point $P_x$ (the end point is denoted as $P_1$ for lines, $P_2$ for quad curves and $P_3$ for cubic curves) defined in the 2D coordinate system. We can then define a parametric variable $t in [0.0, 1.0]$ as well as a parametric function $F$ such that $F(0) = P_0$, $F(1) = P_x$, and $F(t) = Q_t$, where $Q_t$ simply represents the position of the interpolated point for the given drawing primitive. Conceptually, we then evaluate the function _infinitely_ many times for all values in the interval $[0, 1]$ and can then plot its exact representation.
 
 === Lines
-The definition of lines is relatively straight-forward and illustrated in @line_definition. Given our start and end points $P_0$ and $P_1$, we can use the formula $F(t) = P_0 + t (P_1 - P_0)$ to perform a simple linear interpolation and evaluate it #cite(<mathematics_for_computer_graphics>, supplement: [p. 218]). When doing so for all $t in [0,1]$, we end up with a straight line that connects the two points.
+The definition of lines is relatively straight-forward and illustrated in @line_definition. Given our start and end points $P_0$ and $P_1$, we can use the formula $F(t) = P_0 + t dot (P_1 - P_0)$ to perform a simple linear interpolation and evaluate it #cite(<mathematics_for_computer_graphics>, supplement: [p. 218]). When doing so for all $t in [0,1]$, we end up with a straight line that connects the two points.
 
 #figure(
   image("assets/lines.pdf"),
@@ -49,7 +49,7 @@ The definition of lines is relatively straight-forward and illustrated in @line_
 ) <line_definition>
 
 === Quadratic Bézier curves
-For quadratics Bézier curves, things are a bit different. While we still have the start and end points $P_0$ and $P_2$, we have a third point $P_1$ which is called the _control point_. Given these points, the formula for evaluating the curve is given by $P_0(1 - t)^2 + 2 * (1 - t) t P_1 + P_2 * t^2$ #cite(<mathematics_for_computer_graphics>, supplement: [p. 239]). The evaluation of a quadratic Bézier curve can be nicely visualized by thinking of it as a linear interpolation applied twice, as can be seen in @quads_definition.
+For quadratics Bézier curves, things are a bit different. While we still have the start and end points $P_0$ and $P_2$, we have a third point $P_1$ which is called the _control point_. Given these points, the formula for evaluating the curve is given by $P_0 dot (1 - t)^2 + 2 dot (1 - t) dot t dot P_1 + P_2 dot t^2$ #cite(<mathematics_for_computer_graphics>, supplement: [p. 239]). The evaluation of a quadratic Bézier curve can be nicely visualized by thinking of it as a linear interpolation applied twice, as can be seen in @quads_definition.
 
 Assume we want to evaluate the curve at $t = 0.3$. We first start by finding the point $P_0P_1$ by linearly interpolating the points $P_0$ and $P_1$ with our given $t$. We do the same for the line spanning the points $P_1$ and $P_2$ to end up with the point $P_1P_2$. Then, we simply connect the points $P_0P_1$ and $P_1P_2$, and perform another round of linear interpolation with our value $t$, which will then yield the final point on the curve. Similarly to simple line segments, we perform this evaluation for all $t in [0, 1]$ to end up with the final curve as it is visualized on the right in @quads_definition.
 
@@ -59,7 +59,7 @@ Assume we want to evaluate the curve at $t = 0.3$. We first start by finding the
 ) <quads_definition>
 
 === Cubic Bézier curves
-Cubic Bézier curves follow the same pattern as quadratic curves, the only difference being that we have an additional control point $P_2$, and therefore need to run three rounds of linear interpolation to evaluate a point on the curve. The formula is given by $P_0(1 - t)^3 + P_1 3t(1 - t)^2 + P_2 3t^2(1 - t) + P_3t^3$ #cite(<mathematics_for_computer_graphics>, supplement: [p. 240]). In @cubics_definition, we can once again gain a better intuition of this formula by visualizing the whole process of evaluation by repeatedly subdividing the curve using linear interpolation with our parametric value $t$, until we have computed the final point.
+Cubic Bézier curves follow the same pattern as quadratic curves, the only difference being that we have an additional control point $P_2$, and therefore need to run three rounds of linear interpolation to evaluate a point on the curve. The formula is given by $P_0 dot (1 - t)^3 + P_1 dot 3t dot (1 - t)^2 + P_2 dot 3dot t^2 dot (1 - t) + P_3 dot t^3$ #cite(<mathematics_for_computer_graphics>, supplement: [p. 240]). In @cubics_definition, we can once again gain a better intuition of this formula by visualizing the whole process of evaluation by repeatedly subdividing the curve using linear interpolation with our parametric value $t$, until we have computed the final point.
 
 #figure(
   image("assets/cubics.pdf"),
@@ -194,7 +194,7 @@ Another important concept related to representation of color is the distinction 
 
 However, as will be described in @compositing, many compositing formulas require multiplying the RGB channels with the alpha value. Redoing this computation every time is expensive, giving rise to the idea of performing this multiplication _ahead of time_ and storing the color implicitly with the alpha channel multiplied. This is referred to as _premultiplied alpha_ representation @compositing-digital-images.
 
-For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert it into premultiplied representation we simply need to multiply the RGB channels with the alpha value, which results in the tuple $(0.0 * 0.5, 1.0 * 0.5, 0.0 * 0.5, 0.5) = (0.0, 0.5, 0.0, 0.5)$. Doing calculations using premultiplied alpha whenever possible is important to ensure high performance, as it can drastically reduce the number of computations that need to be done per pixel.
+For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert it into premultiplied representation we simply need to multiply the RGB channels with the alpha value, which results in the tuple $(0.0 dot 0.5, 1.0 dot 0.5, 0.0 dot 0.5, 0.5) = (0.0, 0.5, 0.0, 0.5)$. Doing calculations using premultiplied alpha whenever possible is important to ensure high performance, as it can drastically reduce the number of computations that need to be done per pixel.
 
 == Compositing <compositing>
 In @opacities-fig, we have demonstrated what happens when one shape is drawn on top of another one. In case the shape is fully opaque, it will completely replace the colors any of the previously drawn pixels in the overlapping areas, while if the shape has transparency then the background will shine through to some degree. 
@@ -251,7 +251,7 @@ First, we can completely discard information about partial coverages and fully p
 
 Because of this, it is common to render with _anti-aliasing_ enabled. When looking at @butterfly_anti_aliased, it is apparent that the edges of the butterfly are much smoother and easier to look at. This effect is achieved by simulating the partial coverage of pixels by applying an additional opacity to the color so that parts of the background still shine through. In @butterfly_anti_aliased, all pixels that are entirely within the shape are painted using a fully opaque, blue color, while edge pixels appear lighter due to the additional opacity.
 
-It is worth highlighting that by doing anti-aliasing this way, we are _conflating_ two distinct concepts: The alpha value of a color and the coverage of a pixel are not inherently related to each other, but when rasterizing images, using color alpha to approximate pixel coverage usually works well in practice. However, this approach is not flawless and can lead to so-called _conflation-artifacts_ @gpu_accelerated_path_rendering. The effects of this phenomenon can be observed in @conflation_figure, where we are drawing two fully opaque triangles that overlap each other.
+It is worth highlighting that by doing anti-aliasing this way, we are _conflating_ two distinct concepts: The alpha value of a color and the coverage of a pixel are not inherently related to each other, but when rasterizing images, using color alpha to approximate pixel coverage usually works well in practice. However, this approach is not flawless and can lead to so-called _conflation artifacts_ @gpu_accelerated_path_rendering. The effects of this phenomenon can be observed in @conflation_figure, where we are drawing two fully opaque triangles that overlap each other.
 
 #figure(
   block(width: 60%, grid(
