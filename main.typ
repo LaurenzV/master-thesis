@@ -25,5 +25,3 @@
 #include "comparison/main.typ"
 #include "evaluation/main.typ"
 #include "conclusion.typ"
-
-#include "notice.typ"
