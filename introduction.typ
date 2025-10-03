@@ -25,7 +25,7 @@ The sparse strips approach was first sketched out by Raph Levien in August 2024 
 
 To this purpose, the following contributions were made as part of this thesis: First, the existing version of the fine rasterization and packing stages (see @fine_rasterization and @packing) in the prototype were discarded and rewritten from scratch to add support for a `f32`-based (32-bit floating point numbers) as well as `u8`-based (8-bit unsigned integers) rendering mode. The fine rasterization stage was also extended to support rendering gradients, images and performing blending and compositing. 
 
-Next, various optimization opportunities were discovered and and addressed by doing an in-depth analysis of the performance using the Apple Instruments profiler. 
+Next, various optimization opportunities were discovered and and addressed by doing an in-depth analysis of the performance using the Apple Instruments profiler. As part of this, I have for example discovered two optimizations for curve flattening explained in @flatten_opt leading to drastic speedups.
 
 In order to support SIMD, I made major contributions to the fearless_simd#footnote[https://github.com/linebender/fearless_simd (accessed on 03.10.2025)] library to support the necessary arithmetic operations for NEON and SSE4.2. Using that, the flattening, strips generation, fine rasterization and packing stages (see @overview_pipeline) were rewritten to make use of those SIMD intrinsics.
 

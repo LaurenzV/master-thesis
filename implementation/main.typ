@@ -92,7 +92,7 @@ Now that we have an expanded version of our stroke or a shape the user wants to 
 
 However, line segments usually cannot accurately model curve segments. This can also be seen in @butterfly-flattened-fig. While the flattened versions of the shape _overall_ still look curvy, zooming in makes it apparent that it is approximated by a number of connected lines. For plain vector graphics, doing such a simplification would clearly be unacceptable. The crucial point here is that the simplification will be barely noticeable once the shape is rendered to pixels, because as part of the discretization process, the information whether a line or curve was used is lost; all that is left is an approximation of pixel coverage in the form of color opacity. And assuming that the number of used line segments is sufficiently large, the change in pixel coverage will be so small that it is unnoticeable to the naked eye.
 
-In order to achieve flattening of curves, we once again resort to the implementation that is provided in the Kurbo library, which is based on an algorithm described in a blog post @flattening_quadratic_curves. Similarly to stroke expansion, the method for flattening takes a path with arbitrary curve and line segments as well as a _tolerance_ parameter as input. The tolerance parameter indicates what the maximum allowed error distance between a curve and its line approximation is and represents another trade-off: A smaller tolerance will yield higher accuracy but result in more line segments, higher tolerance will result in less emitted lines but might cause noticeable artifacts when rendering. We once again settled on the value $0.25$ for this parameter, which means that the error distance can never be larger than one fourth of a pixel.
+In order to achieve flattening of curves, we once again resort to the implementation that is provided in the Kurbo library (though as mentioned in @simd, the implementation was adapted to be SIMD-optimized), which is based on an algorithm described in a blog post @flattening_quadratic_curves. Similarly to stroke expansion, the method for flattening takes a path with arbitrary curve and line segments as well as a _tolerance_ parameter as input. The tolerance parameter indicates what the maximum allowed error distance between a curve and its line approximation is and represents another trade-off: A smaller tolerance will yield higher accuracy but result in more line segments, higher tolerance will result in less emitted lines but might cause noticeable artifacts when rendering. We once again settled on the value $0.25$ for this parameter, which means that the error distance can never be larger than one fourth of a pixel.
 
 The algorithm works roughly as follows: We iterate over each path segment in the input geometry and perform one of the following operations on it. 
 
@@ -103,6 +103,36 @@ For quadratic curves, things start to get more interesting. One possible approac
 The algorithm in the blog post instead presents a different approach that is based on mathematical analysis: We first calculate the number $n$ of line segments that are needed for the subdivision using an integral that is derived from a closed-form analytic expression, and only then determine the actual subdivision points by subdividing the interval into $n$ equal-spaced points and applying the inverse integral on them @flattening_quadratic_curves. The result will be an approximation that usually uses fewer line segments than the recursive subdivision approach.
 
 For cubic curves, the Kurbo implementation simply first approximates the original cubic curves by quadratic curves and then applies the same algorithm that was outlined above.
+
+=== Optimizations <flatten_opt>
+As part of doing the profiling, it became apparent that the initial implementation of flattening was often very slow, especially for small shapes with lots of curves. Two optimizations were implemented that, as will be shown in @evaluation, lead to a significant decrease in runtime for curve-heavy geometries.
+
+To understand the first optimization, it is important to realize that curve flattening is time-consuming, even if the curve we are processing is actually small, as some of the computations such as estimating the number of subdivisions and actually doing the subdivision need to be performed regardless of the size. The core insight leading to the first optimization is that in the case of small curves, there is a good chance that all of that work is unnecessary as we will simply end up approximating the whole curve by a single line segment, as the maximum distance between the straight line and the curve does not exceed our threshold. Therefore, before starting the flattening process, we first use the position of the start and end points as well as the control points to determine whether it is even possible that the curve exceeds the tolerance threshold. If this is not possible, we just emit one single line segment before even commencing the curve flattening process. As will be shown in @evaluation, this gives us a considerable edge over the other renderers when drawing shapes with small curves.
+
+The second optimization relates to the method used to estimate the number of quad curves needed to subdivide a cubic curve. The original implementation looked like shown in @estimate_quads_old.
+
+#figure(
+  block(width: 80%)[
+    ```rs
+fn estimate_num_quads(c: CubicBez, accuracy: f32) -> usize {
+    const TO_QUAD_TOL: f32 = 0.1;
+    const MAX_QUADS: usize = 16;
+    
+    let q_accuracy = (accuracy * TO_QUAD_TOL) as f64;
+    let max_hypot2 = 432.0 * q_accuracy * q_accuracy;
+    let p1x2 = c.p1.to_vec2() * 3.0 - c.p0.to_vec2();
+    let p2x2 = c.p2.to_vec2() * 3.0 - c.p3.to_vec2();
+    let err = (p2x2 - p1x2).hypot2();
+    let n_quads = ((err / max_hypot2).powf(1. / 6.0).ceil() as usize).max(1);
+
+    n_quads.min(MAX_QUADS)
+}
+```
+  ],
+caption: [The original function for estimating the number of quad curves for subdividing a cubic curve.]
+) <estimate_quads_old>
+
+Without diving into the exact semantics of this function, note that the function contains a call to `powf`, which is necessary for correctness but also showed up as a significant bottleneck in performance profiles. The core insight for the second optimization is that while the call is necessary for correctness, we do not actually care about the precise fractional result of the call, as the resulting value is always rounded up to the next integer and clamped between 1 and 16. Because of this, a much faster approach is possible where we precompute a lookup table containing the sixth power of all integer numbers between 1 and 16 and determining the right one by simply doing a linear search to find the first value that is less than or equal to `err / max_hypot2`. Implementing this optimization lead completely eliminated the `powf` bottleneck and lead to a significant speedup in curve flattening performance.
 
 == Tile generation <tile-generation>
 After converting the shape into flattened lines, the next step is tile generation. The main purpose of tile generation is to determine those areas on the canvas that could _potentially_ be affected by anti-aliasing. An area _can_ have anti-aliasing if and only if a line crosses that area, as anti-aliasing is a correction procedure that is only triggered by the edges of shape contours.
