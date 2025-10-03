@@ -1,7 +1,7 @@
 #import "@preview/subpar:0.2.2"
 #import "../utils.typ": todo
 
-= Architecture <architecture>
+= Implementation <implementation>
 In this section, we will first showcase an example code snippet to demonstrate how Vello CPU's API works. Afterwards, the majority of the section will be dedicated to explaining each part of the rendering pipeline. Finally, we will illustrate how the pipeline was accelerated by employing SIMD and multi-threading.
 
 == API <api>
@@ -113,7 +113,7 @@ Then, we iterate over all lines in our input geometry and generate _one_ tile fo
 
 #figure(
   image("assets/tile_line_example.svg", width: 60%),
-  caption: [Generating tiles for a line. Yellow points represent the locations where the line interesects the top of a tile.]
+  caption: [Generating tiles for a line. Yellow points represent the locations where the line intersects the top of a tile.]
 ) <generating-tiles>
 
 #figure(
