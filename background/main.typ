@@ -2,7 +2,7 @@
 #import "../utils.typ": todo
 
 = Background <background>
-In this chapter, we will introduce some of the basic notions of 2D rendering and explain a number of important concepts, including for example lines and curves, the distinction between filling and stroking as well as anti-aliasing.
+In this chapter, some of the basic notions of 2D rendering and a number of important concepts will be introduced, including for example lines and curves, the distinction between filling and stroking as well as anti-aliasing.
 
 == 2D rendering <rendering_intro>
 Nowadays, people mostly take it for granted that they can use their computers to engage with digital content seamlessly and without any hiccups. This is possible thanks to a tight feedback loop, where users can observe the current _state_ of their system via their displays and based on this make decisions on what to do next by controlling their mouse and keyboard. For example, they expect to be able to navigate and scroll through web pages without significant delay. When writing an e-mail, the typed words should immediately show up on the display so that they can be seen and edited immediately.
