@@ -75,7 +75,7 @@ The main idea behind the benchmark harness is to run various rendering operation
 The first configurable knob is the _draw mode_, which should be relatively self-explanatory. Choosing _fill_ will help us measure the performance of filling shapes, while choosing _stroke_ instead will tell us how performant stroking (in particular stroke expansion) is.
 
 Next, we can configure the actual _shape_ that is drawn, which yet again impacts which part of the pipeline will be mainly exercised:
-- *Rect A.*: Rectangles aligned to the pixel boundary. This is the most basic kind of shape you can draw and most renderers usually have a fast path for them.
+- *Rect A.*: Rectangles aligned to the pixel boundary. This is the most basic kind of shape you can draw and most renderers have a fast path for them.
 - *Rect U.*: Unaligned rectangles. The same as Rect A., but the rectangles are not aligned to the pixel boundary and thus require anti-aliasing. 
 - *Rect Rot.*: Rotated rectangles. They are harder to special-case and the test case therefore demonstrates how well the renderer can rasterize simple line-based shapes.
 - *Rect Round*: Rectangles with rounded corners. The reason these are worth benchmarking is that rounded rectangles are very common in graphical user interfaces and should therefore be fast to render.
@@ -209,7 +209,7 @@ We begin our analysis by once again considering the simplest case of drawing sim
 
 #figure(
 image("assets/mt_fill_Solid_PolyNZi40.pdf"),
-  caption: [The running times for the test "Fill - Solid - PoltNZi40".]
+  caption: [The running times for the test "Fill - Solid - PolyNZi40".]
 ) <mt-solid-fill-polynz40>
 
 As can be seen in @mt-solid-fill-polynz40, things improve as the complexity of the path increases. In the given figure, we only consider line-based shapes, meaning that the most time-consuming step is strip generation, but as can be seen we already achieve much higher speedups in this test case. For small shapes, we are still restricted to a speedup of less than two to three (note in particular how the speedup actually gets worse when using eight threads), but for larger versions of the shape, the speedup gets increasingly better.
