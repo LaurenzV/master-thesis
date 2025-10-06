@@ -1,4 +1,4 @@
-#import "template.typ": template
+ #import "template.typ": template
 #import "utils.typ": todo
 
 #let title = "High-performance 2D graphics rendering on the CPU using sparse strips"
