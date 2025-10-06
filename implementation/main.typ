@@ -174,7 +174,7 @@ Applying this algorithm to our familiar butterfly shape, we end up with the repr
 As a final step, we sort our buffer that stores all tiles first by ascending y-coordinate and then by ascending x-coordinate to ensure that the tiles are stored in row-major order. In order to do so, we use the `sort_unstable` method provided by the Rust standard library.
 
 == Strips generation <strips-generation>
-We know arrive at the most integral part of the pipeline, namely strip generation. There are a lot of details and subtleties to unpack here, and it is therefore worth re-exploring the original motivation before diving into the implementation.
+We now arrive at the most integral part of the pipeline, namely strip generation. There are a lot of details and subtleties to unpack here, and it is therefore worth re-exploring the original motivation before diving into the implementation.
 
 === Motivation
 When rendering a shape, there are three types of computations that may be performed:
