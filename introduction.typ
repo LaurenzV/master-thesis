@@ -27,7 +27,7 @@ To this purpose, I made the following contributions: First, I rewrote the existi
 
 Next, I did an in-depth analysis of the performance profile using Apple Instruments to identify bottlenecks and discover optimization opportunities in all parts of the pipeline. As part of this, I have for example come up with two crucial optimizations for curve flattening (as explained in @flatten_opt) that lead to drastic speedups.
 
-In order to support SIMD, I made major contributions to the fearless_simd#footnote[https://github.com/linebender/fearless_simd (accessed on 03.10.2025)] library to support the necessary arithmetic operations for NEON and SSE4.2. Using that I rewrote the flattening, strips generation, fine rasterization and packing stages (see @overview_pipeline) to actually make use of SIMD.
+In order to support SIMD, I made major contributions to the fearless_simd#footnote[https://github.com/linebender/fearless_simd (accessed on 03.10.2025)] library to support the necessary arithmetic operations for NEON and SSE4.2. Using that, I rewrote the flattening, strips generation, fine rasterization and packing stages (see @overview_pipeline) to actually make use of SIMD.
 
 The last major contribution implementation-wise was the multi-threaded rendering mode. This included coming up with the right architecture as well as experimenting with different approaches and synchronization primitives to support the design.
 
