@@ -536,3 +536,41 @@ The description above outlines the current state of multi-threading. As will be 
 Initially, we believed that a significant bottleneck was formed by the first phase of coarse rasterization. In general, to achieve the best performance, it is important that path render commands are distributed fast enough such that the child threads are kept busy at all times. The theory was that if the main thread spends too much time doing coarse rasterization in the first phase, it might lead to a slowdown since there is a larger gap between dispatching render commands, and some threads might therefore stay idle due to not being distributed enough work. This gave rise to the idea of shifting the burden of coarse rasterization to the children threads instead. This was achieved by putting the wide tiles behind a mutex and letting the child threads take turns in doing coarse rasterization. In this design, coarse rasterization is still a fundamentally serial process, but the advantage is that the main thread will be freed up and can therefore "focus" on distributing the work to child threads as fast as possible. Unfortunately, benchmarking showed that this did not lead to any improvement. Upon closer inspection with a profiler, it became clear that only a small fraction of the time is spent during the first phase of coarse rasterization and that the real bottleneck was actually the second phase. Therefore, the root cause of the suboptimal scaling behavior for large thread counts was that the serial time needed to perform all coarse rasterization operations exceeded the time each child thread spends during path rendering, which cannot be addressed by this method.
 
 This motivates a different approach to coarse rasterization: While there is a serial dependency between the commands _within_ a single wide tile, different wide tiles are completely independent from each other. This makes it possible to instead group multiple rows of wide tiles into larger bands (somewhat similar to what Blend2D does) and assign each band to a specific thread, which is then responsible for doing the whole coarse rasterization only for that band. By doing this, the burden of coarse rasterization is once again shifted away from the main thread. But in addition to that, coarse rasterization happens in parallel since different wide tile bands can be handled at the same time. Unfortunately, as part of our experiments, we determined that this approach only seems to lead to a slowdown. While we were not able to determine the exact reason, profiling revealed a much more significant communication overhead, which can be explained by the fact that the sparse strips of each path need to be broadcasted to all other threads instead of just being sent back to the main thread. Additionally, another problem is that, given the sparse strips representation of a path, there is no easy way for a thread to determine which strips are relevant for its band of wide tiles, making it necessary to iterate over the strips until the right start point is found, which could potentially also be time-consuming. While our initial experiments did not work out, we do believe that this approach could potentially be tuned to eliminate those downsides, but leave further exploration for future work.
+
+== Clip paths <clip_paths_impl>
+As was mentioned in @clip_paths, having an efficient implementation of clip paths is crucial, as the operation is very commonly used in 2D rendering. In the following, we present an algorithm that implements clip paths using sparse strips. While the actual implementation is somewhat involved, the algorithm itself is relatively high-level and intuitive, which yet again demonstrates the convenience of having sparse strips as an intermediate representation. To explain the algorithm, we will demonstrate it based on the example in @clip_paths_fig.
+
+#figure(
+  image("assets/clipping_row4.pdf", width: 80%),
+  caption: [The clipping algorithm visualized based on the 4th row of strips.]
+) <clip_fourth>
+
+On a high level, the clipping algorithm works by first generating the strips for the input shape and our clip shape, and subsequently generating a new set of strips that represent the clipped output shape. To achieve this, we consider each row of strips in an isolated fashion. @clip_fourth demonstrates the process for the fourth row of strips in the butterfly and triangle. First, we subdivide the row into segments, such that each segment covers one type of region of the input shape and clip shape. In @clip_fourth, we have eight segments in total. The first segment covers a strip region of the butterfly and an unfilled region of the triangle. The second segment covers a filled region of the butterfly and another unfilled region of the triangle. The third segment covers a filled region of the butterfly and a strip region in the triangle. The same principle applies to all other segments, where either a filled, unfilled or strip region is covered on each side.
+
+Then, we simply iterate over all the segments and produce new strips for that area depending on what types of region it covers:
+- In case any of the two regions is an unfilled area, no strips are generated at all. This is the case for the regions one, two, seven and eight in @clip_fourth.
+- In case we have one filled region and one strip region, we generate a new strip with the same pixel opacities as in the strip region. This is the case for regions three, four and six in @clip_fourth.
+- In case we have two strip regions, we produce a new strip where each pixel opacity is the product of the pixel opacities in the two input strips. This is the case for region five in @clip_fourth.
+- Finally, in case we have two fill regions, we simply generate another sparse fill region. This case does not appear in @clip_fourth.
+
+At the bottom of @clip_fourth, we can see the generated row of strips for the output shape. Note also that strips produced by different segments are merged into single strips. The result of applying this algorithm to all rows of strips is visible in @clip_impl_fig. The output of the algorithm is simply a new set of sparse strips (like in @clip_impl_result) where as many regions as possible are still represented as sparse fill regions, while anti-aliased parts are covered by a strip. The beauty of this algorithm is that it is incredibly work-efficient as the only computationally expensive part in the whole process is the multiplication of opacities in case a segment happens to cover two strip regions. All other cases simply involves doing a memory copy operation or doing nothing at all.
+
+#subpar.grid(
+  figure(image("assets/strips_butterfly.svg", width: 100%), caption: [
+    The strips of the input shape.
+  ]),
+  <clip_impl_input>,
+
+  figure(image("assets/strips_triangle.svg", width: 100%), caption: [
+    The strips of the clip shape.
+  ]),
+  <clip_impl_shape>,
+
+  figure(image("assets/strips_clipped.svg", width: 100%), caption: [
+    The strips of the final clipped result.
+  ]),
+  <clip_impl_result>,
+  columns: (1fr, 1fr, 1fr),
+  caption: [The complete result of applying the clipping algorithm.],
+  label: <clip_impl_fig>,
+) 

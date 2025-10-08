@@ -341,3 +341,29 @@ figure(image("assets/rect_bilinear.svg"), caption: [
 In the case of nearest-neighbor interpolation, the algorithm is straight-forward: It simply calculates the position corresponding to the new pixel in the old image by multiplying it with the inverse scale and copies the color value of the closest pixel. The result in @rect_nearest_neighbor shows that by using this interpolation method, the "block-like" structure of the original input image is preserved. In certain cases, this can be a desirable property, but in many cases, this interpolation method can cause artifacts and is therefore not often used #cite(<digital_image_processing>, supplement: [p. 88]). The main advantage is that it is computationally very cheap.
 
 When performing bilinear interpolation, we do not only consider a single nearest neighbor, but actually the four nearest neighbors. We then assign a weight to each neighbor based on the  location we are sampling and perform a weighted averaging across those 4 pixels. A similar concept applies to bicubic interpolation, with the only difference that we consider 16 neighbors instead #cite(<digital_image_processing>, supplement: [p. 88]). The results for bilinear interpolation can be observed in @rect_bilinear, where the boundaries appear smoother due to the averaging process. At first glance, the bicubic interpolation in @rect_bicubic has a very similar effect to the bilinear interpolation in @rect_bilinear, but when looking at it closer, it becomes apparent that certain areas in the bilinear version appear less smooth than in the bicubic version. However, the cost for the slightly better quality is a much higher computational demand per pixel.
+
+== Clip paths <clip_paths>
+Clip paths allow cropping an existing shape to another shape, ensuring that only the intersection of both is painted.
+While this idea is conceptually simple, actually implementing this behavior in a 2D renderer in an efficient manner is challenging but crucial as clip paths are used very extensively.
+
+The visual effect of applying a clip path is visualized in @clip_paths_fig. First, we need an input shape which in our case is the blue butterfly. Next, we define a clip shape that determines which parts of the butterfly should actually be visible. In our case, the clip shape is a simple triangle. As can be seen in @clip_result, after applying the clip path, only the parts of the butterfly that fall within the area of the triangle will be visible, while all other parts are clipped away and thus become invisible.
+
+#subpar.grid(
+  figure(image("assets/clip_input.svg"), caption: [
+    The input shape, in this case a butterfly.
+  ]),
+  <clip_input>,
+
+  figure(image("assets/clip_shape.svg"), caption: [
+    The clip shape, in this case a triangle.
+  ]),
+  <clip_shape>,
+
+  figure(image("assets/clip_result.svg"), caption: [
+    The result of the clip operation.
+  ]),
+  <clip_result>,
+  columns: (1fr, 1fr, 1fr),
+  caption: [The effect of a clip path illustrated. When applying a clip shape to some input shape, only the areas of the original shape that fall within the clip area will be visible.],
+  label: <clip_paths_fig>,
+) 

@@ -29,6 +29,8 @@ Next, I did an in-depth analysis of the performance profile using Apple Instrume
 
 In order to support SIMD, I made major contributions to the fearless_simd#footnote[https://github.com/linebender/fearless_simd (accessed on 03.10.2025)] library to support the necessary arithmetic operations for NEON and SSE4.2. Using that, I rewrote the flattening, strips generation, fine rasterization and packing stages (see @overview_pipeline) to actually make use of SIMD.
 
-The last major contribution implementation-wise was the multi-threaded rendering mode. This included coming up with the right architecture as well as experimenting with different approaches and synchronization primitives to support the design.
+The next major contribution implementation-wise was the multi-threaded rendering mode. This included coming up with the right architecture as well as experimenting with different approaches and synchronization primitives to support the design.
 
-Finally, as described in @evaluation, I created C bindings to integrate three different Rust-based renderers, including Vello CPU, into the Blend2D benchmark harness and did the analysis and interpretation of the results.
+Another feature I worked on is support for clip paths. While a basic clipping algorithm was already previously implemented by another collaborator#footnote[https://github.com/linebender/vello/pull/878 (accessed on 08.10.2025)], I designed and implemented a completely novel algorithm (described in @clip_paths_impl) that is more performant than the previous one. While the pull request#footnote[https://github.com/linebender/vello/pull/1203 (accessed on 08.10.2025)] with the implementation has not been merged at the time of writing, it is expected to replace or at least complement the current implementation in the near future.
+
+Finally, as described in @evaluation, I created C bindings to integrate three different Rust-based renderers, including Vello CPU, into the Blend2D benchmark harness, ran the evaluation and did the analysis and interpretation of the results.
