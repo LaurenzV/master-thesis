@@ -35,6 +35,7 @@
 
   #set align(right)
   #set text(size: 11pt)
+  #show cite: box
 
   Advisors: #advisors.join(", ")
 
