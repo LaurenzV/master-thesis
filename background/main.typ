@@ -89,7 +89,7 @@ Cubic Bézier curves follow the same pattern as quadratic curves, the only diffe
   label: <drawing_modes>,
 )
 
-We now know how we can define the outline of a shape using lines and curves, but how can we actually _draw_ it? In general, we distinguish between two different types of drawing modes: _filling_ and _stroking_. @drawing_modes illustrates the difference between those. In @dragon_outline, we can see the outline of a dragon, which has been specified using the basic building blocks we just defined in @drawing_primitives
+We now know how we can define the outline of a shape using lines and curves, but how can we actually _draw_ it? In general, we distinguish between two different types of drawing modes: _filling_ and _stroking_. @drawing_modes illustrates the difference between those. In @dragon_outline, we can see the outline of a dragon, which has been specified using the basic building blocks we just defined in @drawing_primitives.
 
 In the case of _filling_, we determine all of the areas on the drawing canvas that are _inside_ of the outline we defined (how exactly these are determined will be elaborated in @fill_rules) and paint them using the specified color, as can be seen in @dragon_filled.
 
@@ -197,7 +197,7 @@ However, as will be described in @compositing, many compositing formulas require
 For example, given our above example $(0.0, 1.0, 0.0, 0.5)$, in order to convert it into premultiplied representation we simply need to multiply the RGB channels with the alpha value, which results in the tuple $(0.0 dot 0.5, 1.0 dot 0.5, 0.0 dot 0.5, 0.5) = (0.0, 0.5, 0.0, 0.5)$. Doing calculations using premultiplied alpha whenever possible is important to ensure high performance, as it can drastically reduce the number of computations that need to be done per pixel.
 
 == Compositing <compositing>
-In @opacities-fig, we have demonstrated what happens when one shape is drawn on top of another one. In case the shape is fully opaque, it will completely replace the colors any of the previously drawn pixels in the overlapping areas, while if the shape has transparency then the background will shine through to some degree. 
+In @opacities-fig, we have demonstrated what happens when one shape is drawn on top of another one. In case the shape is fully opaque, it will completely replace the colors of any previously drawn pixels in the overlapping areas, while if the shape has transparency, the background will shine through to some degree. 
 
 While the above-described behavior is the most commonly expected one, there actually exists a generalization of how a _source layer_ (containing the shape you are about to draw) can be combined with a _destination/background layer_ (containing everything that has been drawn so far). The foundational algebra for this is established in #cite(form: "prose", <compositing-digital-images>). To put it briefly, that seminal paper introduces an algebraic model that can be used to combine two layers in different ways. The visual effect of these different operators can be observed in @composition-mode-fig.
 
@@ -206,7 +206,7 @@ While the above-described behavior is the most commonly expected one, there actu
   caption: [The effect of compositing two layers with the composition operators presented in @compositing-digital-images. Illustration adapted from @w3c2015compositing.],
 ) <composition-mode-fig>
 
-The source-over composition operator is by far the most commonly used one and intuitively equivalent to placing the new shape _on top_ of the existing one, as was done in @opacities-fig. This is in contrast to the destination-over composition mode, where the new shape is instead drawn _below_ the existing background. Another interesting combination is the _Xor_ mode, where only the non-overlapping parts of the source and background are visible and all other parts are cleared. Finally, the source-in compositing operator can be used to clip a shape to another one, which is a very common operation in 2D rendering. By combining the algebraic building blocks introduced in that paper in different ways, eight other composition modes can be derived, though some arguably are less useful in practice and simply a result of exhaustively enumerating all possibilities.
+The source-over composition operator is by far the most commonly used one and intuitively equivalent to placing the new shape _on top_ of the existing one, as was done in @opacities-fig. This is in contrast to the destination-over composition mode, where the new shape is instead drawn _below_ the existing background. Another interesting combination is the Xor mode, where only the non-overlapping parts of the source and background are visible and all other parts are cleared. Finally, the source-in compositing operator can be used to clip a shape to another one, which is a very common operation in 2D rendering. By combining the algebraic building blocks introduced in that paper in different ways, eight other composition modes can be derived, though some arguably are less useful in practice and simply a result of exhaustively enumerating all possibilities.
 
 Despite their age, the Porter Duff compositing operators form an important part of the CSS and HTML canvas specification @w3c2015compositing and are therefore highly relevant and implemented by most 2D renderers.
 
@@ -268,7 +268,7 @@ It is worth highlighting that by doing anti-aliasing this way, we are _conflatin
   caption: [Drawing and rasterizing two completely overlapping triangles. The edge pixels will assume a brown color instead of a green one due to conflating pixel coverage and opacity]
 ) <conflation_figure>
 
-Since the green triangle completely overlaps the red one, there should be no visible red paint. However, upon rasterization, the following happens: When we first draw the red triangle, we use an opacity of 50% for the pixels that are only partially covered by the shape. The same happens when drawing the second triangle in green. The crucial point here is that since we previously _converted_ pixel coverage to color opacities for the edge pixels, we will compose a green pixel with 50% opacity on top of a red pixel with 50% opacity, resulting in a brownish color along the edges instead of a fully green one.
+Since the green triangle completely overlaps the red one, there should be no visible red paint. However, upon rasterization, the following happens: When we first draw the red triangle, we use an opacity of 50% for the pixels that are only partially covered by the red shape. The same happens when drawing the second triangle in green. The crucial point here is that since we previously _converted_ pixel coverage to color opacities for the edge pixels, we will compose a green pixel with 50% opacity on top of a red pixel with 50% opacity, resulting in a brownish color along the edges instead of a fully green one.
 
 == Complex paints
 
