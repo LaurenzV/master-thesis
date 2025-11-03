@@ -1,0 +1,1 @@
+This is the repository containing the sources for my master's thesis about the topic "High-performance 2D graphics rendering on the CPU using sparse strips". The rendered version of the thesis can be found in [main.pdf](https://github.com/LaurenzV/master-thesis/blob/main/main.pdf).
