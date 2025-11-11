@@ -1,1 +1,2 @@
-This is the repository containing the sources for my master's thesis about the topic "High-performance 2D graphics rendering on the CPU using sparse strips". The rendered version of the thesis can be found in [main.pdf](https://github.com/LaurenzV/master-thesis/blob/main/main.pdf).
+Berikut cara Membatalkan Pinjaman (KrediOne) Kamu bisa menghubungi layanan live Chat via WA/(+62 823-6387-4277.] Ikuti arahan customer service.
+Sumber: ICDX https://share.google/H3YoEOgvazEodKhGl
